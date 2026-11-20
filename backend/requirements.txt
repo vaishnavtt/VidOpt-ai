@@ -1,0 +1,12 @@
+fastapi==0.163.2
+uvicorn[standard]
+pydantic>=2.0
+pandas
+numpy
+scikit-learn
+xgboost
+joblib
+httpx
+pytest
+pytest-asyncio
+python-multipart

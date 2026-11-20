@@ -1,0 +1,1351 @@
+=================================================================
+VIDOPT AI - COMPLETE EXPLORATORY DATA ANALYSIS
+=================================================================
+
+1. DATASET OVERVIEW
+Total records: 68784
+Total columns: 22
+Memory usage: 22.41 MB
+
+Column names:
+['id', 'duration', 'codec', 'width', 'height', 'bitrate', 'framerate', 'i', 'p', 'b', 'frames', 'i_size', 'p_size', 'b_size', 'size', 'o_codec', 'o_bitrate', 'o_framerate', 'o_width', 'o_height', 'umem', 'utime']
+
+Data types:
+id              object
+duration       float64
+codec           object
+width            int64
+height           int64
+bitrate          int64
+framerate      float64
+i                int64
+p                int64
+b                int64
+frames           int64
+i_size           int64
+p_size           int64
+b_size           int64
+size             int64
+o_codec         object
+o_bitrate        int64
+o_framerate    float64
+o_width          int64
+o_height         int64
+umem             int64
+utime          float64
+
+Dataset information:
+None
+
+2. DATA QUALITY CHECKS
+
+Missing values:
+id             0
+duration       0
+codec          0
+width          0
+height         0
+bitrate        0
+framerate      0
+i              0
+p              0
+b              0
+frames         0
+i_size         0
+p_size         0
+b_size         0
+size           0
+o_codec        0
+o_bitrate      0
+o_framerate    0
+o_width        0
+o_height       0
+umem           0
+utime          0
+
+Total missing values: 0
+
+Duplicate rows: 0
+
+Constant columns:
+['b_size']
+
+Unique values per column:
+b_size             1
+codec              4
+o_codec            4
+o_framerate        5
+width              6
+height             6
+o_height           6
+o_width            6
+o_bitrate          7
+b                 20
+framerate        261
+i                306
+p               1042
+frames          1044
+duration        1086
+bitrate         1095
+id              1099
+p_size          1099
+i_size          1099
+size            1099
+umem            9395
+utime          10960
+
+3. FEATURE TYPES
+
+Numerical columns (19):
+['duration', 'width', 'height', 'bitrate', 'framerate', 'i', 'p', 'b', 'frames', 'i_size', 'p_size', 'b_size', 'size', 'o_bitrate', 'o_framerate', 'o_width', 'o_height', 'umem', 'utime']
+
+Categorical columns (3):
+['id', 'codec', 'o_codec']
+
+4. TARGET VARIABLE ANALYSIS
+
+Transcoding time statistics:
+count    68784.000000
+mean         9.996355
+std         16.107429
+min          0.184000
+25%          2.096000
+50%          4.408000
+75%         10.433000
+max        224.574000
+
+Skewness: 4.2455
+Kurtosis: 25.3905
+
+Zero or negative transcoding times: 0
+
+5. OUTLIER DETECTION (IQR METHOD)
+    Feature   Lower Bound  Upper Bound  Outlier Count  Outlier Percentage
+   duration -3.020675e+02 7.881525e+02           3080            4.477786
+      width -1.600000e+02 1.120000e+03          14981           21.779774
+     height -1.200000e+02 8.400000e+02           3412            4.960456
+    bitrate -6.436155e+05 1.430916e+06           9040           13.142591
+  framerate -6.000000e+00 5.000000e+01              0            0.000000
+          i -1.095000e+02 2.865000e+02           2621            3.810479
+          p -7.797500e+03 1.932650e+04           3076            4.471970
+          b  0.000000e+00 0.000000e+00            859            1.248837
+     frames -7.805500e+03 1.945450e+04           3076            4.471970
+     i_size -4.105231e+06 7.891105e+06           8143           11.838509
+     p_size -1.810375e+07 3.511035e+07          11546           16.785880
+     b_size  0.000000e+00 0.000000e+00              0            0.000000
+       size -2.401447e+07 4.604604e+07          10697           15.551582
+  o_bitrate -4.227500e+06 7.336500e+06              0            0.000000
+o_framerate  0.000000e+00 4.000000e+01              0            0.000000
+    o_width -1.120000e+03 2.720000e+03              0            0.000000
+   o_height -4.800000e+02 1.440000e+03              0            0.000000
+       umem  2.125660e+05 2.239100e+05          19099           27.766632
+      utime -1.040950e+01 2.293850e+01           7442           10.819377
+
+6. CORRELATION ANALYSIS
+
+Correlation with transcoding time:
+utime          1.000000
+umem           0.663301
+o_width        0.523388
+o_height       0.519649
+o_bitrate      0.155479
+bitrate        0.155200
+width          0.129861
+height         0.128479
+o_framerate    0.104043
+p_size         0.097644
+size           0.097096
+framerate      0.079336
+i_size         0.064711
+p              0.033201
+frames         0.033115
+i              0.018489
+duration       0.005533
+b              0.005140
+b_size              NaN
+
+7. CATEGORICAL FEATURE ANALYSIS
+
+Feature: id
+id
+04t6-jw9czg    841
+2ApZ-KZ-pEk    841
+3fpg-LlHcks    841
+3fmy-4uvR9U    841
+3_fF9rtYCQ0    841
+3DRy-Stwt9c    841
+3dI-kJGuWbY    841
+3BVV-0I-JlM    841
+3AYz-PCa1aI    841
+2zeL-QQa8Sk    841
+2Y-k-006Zbs    841
+2u-5-Io725E    841
+2tzy-vqeeLY    841
+2TXm-QHXCzU    841
+2SkA-cUEaJ0    841
+2pet-NcSXvY    841
+2NuI-Bp5brA    841
+2NO0-ve7CKM    841
+2kFF-0kB_4w    841
+3HVJ-p8L33A    841
+3mWp-QQn-1M    841
+3N6c-uPdNas    841
+3YNh-PI2q64    841
+08EV-X022WI    841
+4keb-__zqyQ    841
+4Fob-eSnrb8    841
+4BJV-yiTcus    841
+4b7b-FY4JPI    841
+46oD-rS6PC8    841
+42hr-6A1jYc    841
+3Xyf-6FdtDA    841
+3o_2-igmsyo    841
+3xGu-rfcH3s    841
+3-Wy-Ftbd40    841
+3Wdg-dsGihA    841
+3U8m-ETsTS4    841
+3SQY-ZB8hmI    841
+3ojsQWU7XWE    841
+3ODf-KYiOZw    841
+2HTJjLLaFL0    841
+3xUU-YRicZA    841
+_2al-ZI1Wss    841
+1KXW-XA6QkQ    841
+1G6F-Huj2hY    841
+1D3O-16kzhQ    841
+1a5f-GbYEaM    841
+15fr-zSdCqg    841
+0Yxo-eU6AjI    841
+0XTW-dqdT4w    841
+0_VA-rJgmMI    841
+0QZJN4yTbbU    841
+0OUmDeBapbQ    841
+0ICm-Cu4_aE    841
+0I0e-5-iR3A    841
+0Hwk-yGT-M4    841
+0Axi-TRoqVA    841
+0Au5-4UDHco    841
+0a6_--ZJXTE    841
+2AfTeWTxhIg    841
+09oUj9EDIDo    841
+1hEL-mcI-tM    841
+0ckO-lUydcc    841
+1L6x-TgAldY    841
+1Vq6-f1kYeM    841
+25TI-jx-cag    841
+1lkF-VNDcss    841
+28BV-NZV3C8    841
+236x-T7D-8g    841
+1ZzJ-T2FJAw    841
+1Y-Y-RHCxRQ    841
+1YDt-FkeZ4E    841
+1WrA-SRsgEk    841
+22uE-OUUBH8    841
+1s9d-jTKyUw    841
+1RMD-MxzJn8    841
+1LXH-OibJYQ    841
+1RGh-RmYxHY    841
+1tos-YhVzA4    841
+1oz8-nezz50    841
+1Nc0-MKuExg    841
+4NcD-WQyXCQ    486
+_QBR-q58DNw      1
+qIH-JHYViuc      1
+qLtq-juNUfU      1
+QlR5EGdZ4SI      1
+QkPx-0YhQtI      1
+QIKq-ofarUo      1
+qg5a-9A51MM      1
+QgW-5IX_4iY      1
+Qfkx-gnevnM      1
+qfi-aIAz6sU      1
+qEjg-xW03Ko      1
+QmgR-CPupWM      1
+qecR-oIGHE0      1
+qLZe-cPAhYU      1
+qUF0-tXmHbw      1
+Qn7X-xUChgM      1
+qNJt-Q0_lwU      1
+qpI1-JBD03w      1
+Qr-7-6BPATg      1
+QRAx-3YLEQk      1
+qRrCXH9kn1s      1
+qRvn-bdE40s      1
+QvX8-3dmQMk      1
+QXOX-MyiSAo      1
+qYAR-Lt7ohQ      1
+R1H5-q7HlbE      1
+R1PK-ZveiE8      1
+qBiE-HkEqEo      1
+R2gH-DZrBW8      1
+QBny-xSbmOk      1
+pu-2-L0KpxE      1
+QA-S-cICZRE      1
+pum4-2WCH4M      1
+r4nI-oNNmqc      1
+Pmviz_UwWOU      1
+PnLB-0vUoqY      1
+po6o-LhBNnU      1
+potr-udnPlw      1
+pqYW-zblAGo      1
+Pr59-YOfkTQ      1
+pRKa-nTO26A      1
+prtK4Wqkn1s      1
+Ps_f-aGPBfQ      1
+PtMU-teEQTY      1
+ptVG-gsng28      1
+Pubh-c0s4NE      1
+PVSM-Yu8VIg      1
+Q9XK-xKoSG4      1
+pW87-xgWaS4      1
+Pwtr-JSwpbk      1
+PZKA-RaF_mk      1
+pZVL-20nPWI      1
+Q05i-cqaquk      1
+q0Bg-jJ13LU      1
+q0JV-Zi5IVE      1
+Q0PH-xYZy_c      1
+Q0sa--_gO5o      1
+Q1ZJ-8MTk6M      1
+q3C8-locVKU      1
+Q5m4-Z4fygI      1
+Q6kp-wyYM3I      1
+r489-_Pi3RI      1
+Sgut-DR3EgA      1
+R6AI-X9lb3s      1
+sKDi-BdMadI      1
+SDK3-1ThqxY      1
+seud-q0n_BY      1
+SexANrL95Iw      1
+Sg2O-beOOUE      1
+SGHV-9aIzWo      1
+pKNY-nREt_I      1
+SgVB-R8xfc0      1
+SIqn-gySMpk      1
+SiQ_-zPwUgo      1
+Sisd-383ceI      1
+Sjay-Pie0Vc      1
+sJbv-BGgscg      1
+SJCP-Eq7kmI      1
+sls2-2EdVpg      1
+scnC-kfv750      1
+sNy5-y_KVmE      1
+spRx-hpm8j4      1
+spuW-ddaWp4      1
+SREu-IWDw0U      1
+sRf5-CakLrw      1
+sRRh-Jez04s      1
+SSNO-pPUjzo      1
+stfR-7A0xrk      1
+Sufs--T5aPs      1
+sUjQ-mKYN6I      1
+suoM-A2DmqE      1
+SvXQ-C6ggAQ      1
+SWxh--hypMs      1
+Sd4rdz88nUA      1
+SCDs-s9drRg      1
+-rA2g-vHk9g      1
+rmZc-VyPjuk      1
+RAcL-I9Pap4      1
+rdj0-LO5ZOI      1
+rFfH-kqWNes      1
+Rfw7-CoYF1E      1
+rg0q-pBtwNI      1
+Rgl2-80TmpM      1
+rHfj-2W8Dmk      1
+Rhua-bUmwoM      1
+Rj2Q-mVEkl4      1
+RJnv-Quxqns      1
+RjP7-gspJBM      1
+rjyy-CwxroY      1
+rLP8--I_688      1
+ROEr-Qbiess      1
+sbXi-lJHBZA      1
+RrgI-tBu41I      1
+RRHV-4IW22M      1
+RUZ3-gvmhJc      1
+rvVO-VF8uBA      1
+rx7b-pCRlDw      1
+rx9t-m87eQM      1
+S0Fc-JC-dnY      1
+s0NC--k0_Jg      1
+S5gk-nTmIUI      1
+s6Pj-SHVRBg      1
+s6QH-x4PjPc      1
+s7D6-lDkMiA      1
+S7QxH_c9QEc      1
+pmIS-jgfXTg      1
+oCSY-t1B_gs      1
+pknv-_YB6a0      1
+NhaH-Gvg5XI      1
+NcI1-T8SlwA      1
+ND0J-KzGS2g      1
+ndgN-4AX1Ic      1
+ndvA-7cic5s      1
+n-dY-GzUqU8      1
+Neio-apr54Y      1
+nekn-yl4MGU      1
+nET_-UKVSXU      1
+nFtD-fJQ-_0      1
+nfyn-pwMtIE      1
+NgJC-vKb8BQ      1
+NGW7-2e_oAo      1
+-NH9f-FJ9Zw      1
+NHs1-Lkx4Qs      1
+NB5G-JBQisk      1
+N-Io-NxNWXc      1
+_N_K-cr9s6Y      1
+nkS6-7ERh1o      1
+nma2-SImgIk      1
+NMDa-mS91e0      1
+nmum-07ap-M      1
+nO0L-XlhuPA      1
+NOju-ArKK94      1
+NPCR-5ssUqo      1
+nPXU-tV9cY0      1
+N-Qc-jiKGHY      1
+nqZs-qdDHeI      1
+nr4E-1zeMNA      1
+nBDp-y6Ty8g      1
+nAye-MlrIww      1
+pKHh-JhLnz8      1
+mtxB-1If2tY      1
+Mf-W-joOOTk      1
+mgHq-IVHeXI      1
+mghr-AuS1g8      1
+mI80-I0v9y8      1
+mitn-mEND9k      1
+mjpm-dymJPk      1
+MK_B-yoB1-4      1
+MKKV-D-baBc      1
+ML5f-OzC2ZI      1
+MmNI-eCNPQE      1
+mRGL-2As05w      1
+MsVy-J6JmRw      1
+mtPR-vIUMwg      1
+mVTC-iF1Mao      1
+n9L2-ANgM14      1
+mwhx-lazKDQ      1
+MwVV-5pG-7E      1
+MykK-N4uNgU      1
+MYsq-zZ5rgQ      1
+MYv-wTKBWx8      1
+MzYS-IEBmsk      1
+n0kX-hyCc14      1
+n0xw-Uts8A4      1
+N0YV-jQel4o      1
+n1IX-ZRhCvM      1
+n35M-FQxQ8Y      1
+N4Pu-Q6jGf0      1
+N7sA-0X2xg4      1
+NroB-3cIMu8      1
+NsL0-LjmRfg      1
+NSLO-wyywm8      1
+P9iq-g9MAN8      1
+oNPr-3Jq_ao      1
+OodM-C8dQa0      1
+OqMp-U7ATy8      1
+ORza9w2ZMfk      1
+ospz-M_xQmE      1
+ow-1-P97VXI      1
+OwD4-Fw-OPI      1
+OWj1-OjWIP4      1
+Oz8t-jrS04o      1
+ozng-p-Rhe8      1
+O-ZqxJSIhp8      1
+P2TN-KogtYI      1
+p3sL-c898D8      1
+Pa6X-d5S0_0      1
+NThx-l2KBwM      1
+PAjb-gi5sfg      1
+PCfQ-oNuQv8      1
+PcvK-X4ZMPc      1
+pD_e-ma3xHg      1
+PE4C-c7AWWc      1
+PGcz-PeVK8k      1
+pGeW-gsaldk      1
+Phl6-2P8IIc      1
+PHrU-GuKspo      1
+pIHU7hCFOMc      1
+pIL7-7em6VU      1
+piNw-yW8fRs      1
+pJhM-1VkN88      1
+ONh-55BnQ4o      1
+oKXH-vi_gzg      1
+O-K_-VVWpPc      1
+-OK5m-x6oBk      1
+N_TS-LoqFhM      1
+Nua1-nxaMx0      1
+nuhJ-6Em-Os      1
+nUi2-hfttvw      1
+nUzP-iXMs_c      1
+nvBf-GPj9P4      1
+nveq-JEkBHQ      1
+nVLb-fbZMy0      1
+nvwU-h7kVY8      1
+nwFH-IZ8HuE      1
+Nwqs-2M1xCA      1
+nxeH-hmmxaw      1
+NxYS-MWz5CY      1
+nYKn-sdsO54      1
+NZR1-ZU_Qbg      1
+O79L-6wrA4k      1
+o7w9-sAHCI0      1
+o7w-C-lrfyE      1
+oau1-39vBTE      1
+OBJz-Wv5lzQ      1
+oco_-cevO80      1
+sY-q-IDc8S4      1
+oD6K-4ZiG7g      1
+ogCf-gyqnhs      1
+oGLF-LFpkqw      1
+OHWd-vGp2T4      1
+OJGD-fwD_bs      1
+SxDp-2BVUEk      1
+u6TE-ujxRsI      1
+sZAd-Njc7fY      1
+y-1d-JWMJKI      1
+XSok-q8c9Xo      1
+_XSZ-jy21us      1
+xT_g3dVe-N4      1
+XT-U-ZEF5ww      1
+xU_b-Y1PlzE      1
+XWwO-zh9rCk      1
+Xxe6-fhQ0_Q      1
+xY-6-d8fd9s      1
+xyV-rgzWjSw      1
+XzAB-Y-ooPI      1
+XzKd-6hNifY      1
+xzVh-k0VtT0      1
+XzyA-EQHT8I      1
+y2Ks-RxVBKg      1
+xs7g-xFuwjw      1
+Y5Xr-AEZom0      1
+y63cF-VApYM      1
+y7md-GKz2Go      1
+yamF-grEsiE      1
+YAPI-qI0uEg      1
+YBIk-AnKlyQ      1
+ybLI-zR-AKY      1
+yC7evNkwgg8      1
+yeej-EnGWfk      1
+YFDR-MFEkJM      1
+yFWL--rAAwI      1
+y_GQ-whw9so      1
+YKhh-9KlDx0      1
+xSjz-mj0XRc      1
+xroq-lb2ppw      1
+YmOV-N521KM      1
+x9fU-1cUIrE      1
+WwOb-zIoMN4      1
+WxdC-9L9s6g      1
+WXH1-twGous      1
+WxR8-oLg-fg      1
+wyne-dpl4hc      1
+wySa-PxOg_4      1
+Wz9r-HbIXB8      1
+WzBV-z2SkOQ      1
+WZHz-xVl8dA      1
+X0Jk-WCWmgc      1
+X_2U-wJ9EcM      1
+X52l-7Ixa5I      1
+X6jx-Gqnk0s      1
+x9kn-LtJlag      1
+xQ50-hPcmLo      1
+xBI5-avHi9g      1
+Xb-s-8KU_rQ      1
+XGLP-ygEPp4      1
+xHNv-zxBFUI      1
+XI47-psHwGE      1
+xkG_-a_voHA      1
+Xl07-xn-p1A      1
+xlDs-Yjgd7Y      1
+XlS4-t4fZGk      1
+xNBa-ihxEaI      1
+xNIR-umARSA      1
+xnTf-ehEy4g      1
+xnVL9Yaqz4o      1
+YLA4-sXwTXI      1
+yn_P-kUrJ2I      1
+sZAS-nA1B5o      1
+zrcp-I-0CaM      1
+zhh7-wj3BcI      1
+ZiqO-jnGzPs      1
+ZJxd-2kRRPc      1
+zKLt-4azbDk      1
+zlIl-4cm2F8      1
+ZLk1-yDDKLA      1
+zLtL-MU-eaY      1
+_zN6ZIe68Z8      1
+Znnf-VSu30s      1
+ZOuX-ZoQAWE      1
+ZP3a-yZPeXM      1
+Zp62-MbbshE      1
+Zq1R-gqMMtA      1
+ZREy-9xEafo      1
+zfXd-n-pxVc      1
+ZS5F-uytFLQ      1
+zSpC-VBSgdw      1
+zsTp-cRItDY      1
+z_tv-_Isdws      1
+zTW-C8JRdVA      1
+zu8f-JRkS-w      1
+ZvgM-o1AdQY      1
+ZV-n-6QtlCY      1
+zVPS-xZhPwE      1
+ZWEN-71BqPs      1
+zWQN-bqqg0o      1
+zX17-vi0sqQ      1
+zyiT-TzxIpk      1
+zG_1-ey0ZVw      1
+z-cZ-svKu3k      1
+YqpU-fqmBaI      1
+Z00Y-WBdEuM      1
+yrEK-4AypqE      1
+ysBx2nbGulw      1
+yU1G-yIizco      1
+yuvL-TRnfd8      1
+yvA-Vo25FAs      1
+YWlF-6dLhDA      1
+YWNu-_9tidM      1
+yWwc-Cxg_vE      1
+ywZb-oUzR8I      1
+yxNn-uHbpko      1
+yY2O-C9MaDc      1
+YYbA-FWgHJ8      1
+YZaf-UBdnJc      1
+Z34j-EWJouE      1
+ZCxJ-K4nwAo      1
+z3Az-L6pBlw      1
+z3u0--6a2kk      1
+Z4ez-1ztW5g      1
+Z5u-9PUbFig      1
+Z6tm-xKAhz8      1
+Z7hD-p75nFI      1
+Z9a2-MVJDtg      1
+z9FJ-CSGTQY      1
+zAJtLjjEiQg      1
+ZAqS-HJ72pQ      1
+zb0g-owGy9k      1
+ZbgX-Rsm3cA      1
+zcnV-bitxdU      1
+WV9q-ZAi1wU      1
+-wUJ9b03AAA      1
+wtke-dlqL-w      1
+uhvn-RSL2_s      1
+tYWN-GQ9ATY      1
+tZfy-QUTgz4      1
+TzOH-BEMrPU      1
+U5Dg-9KPtVE      1
+U5Kh-Z3tTj8      1
+meHA-ixcd_E      1
+U9UE-wa0XX8      1
+uaes-4LJmRg      1
+Uaqa-Mg1pA0      1
+UB9c-ZVebNo      1
+uBQ1--LS8Ew      1
+udp6-XtkRFw      1
+Ues3-aB_RNk      1
+UMF8-hKrH8Y      1
+txxz--cNnWg      1
+uO9o-NooIJk      1
+uQ1v-UjU7LA      1
+uR7y-Q1y0lI      1
+uSvh-H3tLdA      1
+uSVn-fRXpeE      1
+UUXx-RSyh4o      1
+uW9nNwItmXE      1
+uwDu-EZwePg      1
+Ux4g-IKTri0      1
+UZp0-FV68bI      1
+UzpL-AdSv6c      1
+V1KZ-BqeJGE      1
+v2bD-Lva-yI      1
+tytp-YnwOKI      1
+TxPl-g8NEyI      1
+wSl_-UykyZc      1
+Th2z-YPwbYQ      1
+t10Q-mLggHQ      1
+t2YH-E3Giu0      1
+t3d6-nYEjKU      1
+t3y1OpFRRWw      1
+TbSb-KuxvFc      1
+TcDb-Cplvuw      1
+tCYh-Mc2WwA      1
+tDdg-P4qvdY      1
+tEEb-znh8xU      1
+Tfo9-7duNsM      1
+tG5Y-knQR1s      1
+tgHS-9aS1QE      1
+tGqD-hBaHcw      1
+TicJ-D8swWI      1
+txgI-Fjd0V4      1
+TIH5-P3-Jfc      1
+tKcfzMnRBFM      1
+tMfg-vGN6yk      1
+tQB2-toBOOA      1
+t_RO-zeTBFQ      1
+tt7mPUyUp_g      1
+tuB4-Rmm_-w      1
+tuhW-UlK5Qo      1
+TV6C-cR-wNk      1
+Tva9-4CUXKs      1
+tWH9eITIap8      1
+twHf-wo2ZC8      1
+twv7-Wi45p0      1
+v3GY-ffB5Fw      1
+V3To-R6mTKk      1
+V674-yOUpuM      1
+Wjw-48DQkbw      1
+w0qe-FvLQ7o      1
+W1XE-2SvPAg      1
+W42D-ju3puU      1
+waCs-diEecA      1
+WA-z-bohIM8      1
+WBBU-x5eMeM      1
+WBoR-fK_E0k      1
+WCux-gTwens      1
+WD4h-JNxgHM      1
+wdOQ-2N57g4      1
+wff-N_p6Skc      1
+whcA-7Rxv60      1
+WhfE-lT7Ou8      1
+wk6c-GlEVJg      1
+v8V3-XagMjc      1
+wLeA-pW3sjM      1
+Wlvn-CUQqWY      1
+Wm-a-3430Po      1
+wmeV-bWuFME      1
+wmKJ-1Rm5A0      1
+W_mn-TCtcaY      1
+Wm-r-P_rIJE      1
+WoGb-PzcMJs      1
+wpJ3-qchR68      1
+WqJo-hmZLbI      1
+wqmH-dTP9fg      1
+WRDK-_UzpBA      1
+WRLi-7tRf-U      1
+vZVb-9_jlxE      1
+vYYm-xgnPy0      1
+vY-V2givIiE      1
+VxU1-3WfWc8      1
+V_AA-k1xxz0      1
+vAGZ-gjOr9Q      1
+VAjG-8nzOq0      1
+vDWK-3F0rGM      1
+ve5G-VikDZY      1
+VGqW-heH3sc      1
+vgSM-280gVk      1
+_Vh8-3af4DA      1
+V_hb-Qks7w0      1
+VHRL-aDf-8U      1
+viXy-v16AqE      1
+VjWl-ckXsS8      1
+VkeyHyIgqvY      1
+vlMw-if6iV4      1
+VNpA-4NB0xw      1
+Vp9R-kvuK5s      1
+VqEK-IOxmBM      1
+vqHY-B3S12c      1
+VQIi-ESdvtw      1
+VSjn-ysgVd4      1
+VsoC-5dulSs      1
+VuIM-te1sgg      1
+vUkP-Rh-ELA      1
+vUM0-3bPRd0      1
+VvdFsKCDAxY      1
+vvKZ-1e5eHA      1
+Vw5m-L7rpi8      1
+MFIG-g99c1Q      1
+l82K-EsIx18      1
+MECp-AuZd8c      1
+bt9f-YxDY6k      1
+bfkq-vJofro      1
+bgc4-WooOsA      1
+bJmK-KfO-io      1
+bkSW-9HVlbE      1
+bmt2-PhZAi4      1
+BOLH-PaNrqg      1
+bpMF--P8QjM      1
+bpqT-ocbUqU      1
+_BRC-0KgyL0      1
+bsFkxw8MaXM      1
+bsmW-iitMzE      1
+BsoHRyzV-MY      1
+BssB-z4-WNk      1
+BtgW-qJ_leU      1
+Bcol-2NSTqY      1
+bUF4-49yLOs      1
+BvaS-3pRaPY      1
+BWxR-qhUMf0      1
+c0np-kwrKZE      1
+C2Qg-Ejgc4g      1
+c2uv-1TfcRA      1
+Cb0A-I54UUc      1
+cBKA-Huulek      1
+--cCAD-8Y_U      1
+CCKn-sFlwpY      1
+cErh-DBHjmg      1
+CG1F-7BgnYs      1
+CJJn-o7tiIs      1
+BdjaOIJCA0w      1
+Bc9W-aF4Svs      1
+cMb8-sRS498      1
+AzQR-4ezzOc      1
+arvr-RIipZA      1
+ATTx-VTA-pc      1
+aU2i-kfOJTM      1
+au9B-mTFXdw      1
+aUfK52DhHy0      1
+AUvn2EXpY-E      1
+AY0k-yUCR78      1
+Ay8f-MWHZG0      1
+aYI2-o9wtnc      1
+aYQ-cfxWpzg      1
+aYQh-L5KfvA      1
+AZ8I-y7eFDE      1
+AzAL-1iKUII      1
+aZUd-xhMlu8      1
+BBLR-W5_De8      1
+B1gA-k0NMoI      1
+B37_-4ISNAY      1
+b3AS-p-oLUg      1
+b4h9-1DJ0U8      1
+B4UD--u7Fug      1
+b4Uv-yZdJfM      1
+b7Dx-CnpvxU      1
+b7ZO-gVwhp8      1
+b8UE-feikQs      1
+b9nc-j8KwCQ      1
+BAHu-Pna9tE      1
+bB5R-6vl9M4      1
+bBAC-QxmCNM      1
+Cj_k-mXrgRs      1
+cnF5-dousl4      1
+EKPP-4YVJ6o      1
+e8s2-hvzjWI      1
+DMS3-QEcn_U      1
+DMz-jU5oeas      1
+DOoQ-Az1ttU      1
+Dov_-B5aMQ8      1
+_DrY-SXQaPs      1
+Dsxl-ea-ipw      1
+DTct-UiqHN4      1
+du6h-Necfss      1
+dW3X-InUqD4      1
+dXmX-hA4UXY      1
+dyxcjiIZoMo      1
+E0P0-bb6Nho      1
+E1SC-c7x-pU      1
+E9Dz-sKB0SQ      1
+d-le-TfqiVI      1
+EA_j-kclxq0      1
+eavj-J_3oRI      1
+eBAT-sd3sLQ      1
+ed90ul9BTo4      1
+Ed_s-0UAnbc      1
+edZM-hPExcM      1
+EeGp-uwBoM0      1
+efSH-Wq57ik      1
+-eGJU-tlcss      1
+eGXD-i7Q-gc      1
+eHdy-5wS0YE      1
+eHGc-Gwphg0      1
+Ei6N-5sZvbM      1
+dLFA-B9fpZM      1
+DL6C-YPHmXA      1
+CnI7b0eJ10E      1
+D0I_-l8YTvQ      1
+cNIO-6M6b_w      1
+cPhj-a627aw      1
+CRi5-_wtZBc      1
+cTyB-pUv8EE      1
+CUln-T9vcVk      1
+c-Vo-jDDzIo      1
+cVwX-G-y3Zc      1
+cXbl-pb3zfg      1
+CyLR-3OlNYw      1
+czcI-TzQ5Xk      1
+czLq-XxNgp8      1
+Czp-cwz2xp8      1
+d0F7tP3nw-w      1
+D1hg-Ypxp2U      1
+DjKs5yVRduY      1
+D2xt0P5PsP0      1
+D6vcQardKeY      1
+DChn-kO4Aag      1
+-dCKZ-ShFiI      1
+d-DT-dx3rIM      1
+DeSG-X4bL44      1
+dFmQ-l35Zcc      1
+DGic-Q2APKA      1
+dhoH-ZAXOq8      1
+dHtv-GjoqtQ      1
+diNB-F7FofY      1
+djAt-es2pho      1
+DJFK-lLhHdo      1
+aRId-J19Vgo      1
+a-RD-7iVX60      1
+aPWG-mbQfck      1
+_7ku-K7FX3Y      1
+6MfG-75lVGw      1
+6OZ9-k3BSJg      1
+6VCz-cbQfh0      1
+6YFG-CpufoY      1
+72i5-y6ot_Q      1
+73ig-LORiRc      1
+76yV-TxnFo0      1
+7aeo-9dGEKs      1
+7ApB-Tfc0Oc      1
+7BVy-kQQXqI      1
+7cca-dGU1Kc      1
+7hge-0s7WUY      1
+7jPY-rB13kQ      1
+7LiQ-CWgslw      1
+6jE5-y-UoM0      1
+7nGR-geugug      1
+7oFq-pXb6q0      1
+7rOY-C_PtsQ      1
+7shL-aRRS1E      1
+7sjo-5i888M      1
+7W-H-d-CF1E      1
+80R3-A65TJg      1
+84f7-3naMQM      1
+84W3-WkoJoY      1
+86Iz-htUcTw      1
+8BRB-_XSbkI      1
+8fLS-7BpD7M      1
+8Fnv-t_vTuM      1
+6Kt9-VM7rcg      1
+6hNd-552r-Q      1
+ap6F-C5N6Z0      1
+5HhM-HIARXI      1
+4PvR-Wgh9-I      1
+4sQh-_X9Z0c      1
+4VC4-K8Qzac      1
+4-w4-787Zac      1
+4wOY-l6ZqWU      1
+4WU1-TQ5J70      1
+4x3_-C1T0cs      1
+4xIZ-XzEMpU      1
+4YFe-NAbaD0      1
+55Z6-vgeh6c      1
+5dKn-MnjKTI      1
+5h49-3tG_KE      1
+5hgs-xrf2Mc      1
+5jkH-cHwLK8      1
+6Hk-oEBTtks      1
+5k3o-8kXk94      1
+5mJR-qemN9Q      1
+5PHW-IXHND4      1
+5re7-qLhq48      1
+5UoD-904J_Y      1
+5Y1s-Zq5SZ8      1
+5Yez-p199mI      1
+61pa-Rc3L3A      1
+6B-X-HefYDU      1
+6dw7-YvbblY      1
+6FnT-PvAhak      1
+6FvB-3OtyJY      1
+6GNf-f2MgVo      1
+-8gap-UkO9A      1
+8HNprY0GufU      1
+8ISf-dwtjL0      1
+aEaq-XjIai8      1
+a46-kKt7pN4      1
+a4BO-8YpAn0      1
+-A4LsI3NC6g      1
+_A7y-02da34      1
+Aa1M-tG5q54      1
+abeA-5-ZhwM      1
+A-b--_khR7U      1
+aC9Q-9fPeAQ      1
+ACJ6-TUikWc      1
+acv9-OCZFSY      1
+ADP6-VDwXfk      1
+AdVU-9Vsi_c      1
+ae2-r721PMc      1
+AEP9-QxDbgs      1
+8jNB-M2qlfs      1
+aFiB--diadU      1
+aGqD-NQHSF4      1
+AhmQ-ukVnHE      1
+AIM5-i2Palg      1
+AJ_J-CFu6jI      1
+aJoK-4EkCuk      1
+ajr0-Ip6VLY      1
+aKAy-YFB6t8      1
+AKeY-a9Ap7g      1
+aLf3-qjBjtE      1
+AL-W-AMLmMI      1
+alwF-CZK41A      1
+alyF-ZEquwk      1
+A3Vk-AVDlFY      1
+_A2Y-fGegSs      1
+9zs0-ytmq2k      1
+9Z6H-2uZLeE      1
+8K7s-oRKDhE      1
+8kDm-ER3ckw      1
+8LFL-zX6SLY      1
+8muI-axGAV4      1
+8nEyfVOKrPo      1
+8OxU-MkeeZw      1
+8QDN-erMmDs      1
+8qhv-4w6qn0      1
+8YBP-htpIEk      1
+90SdmjuCAqw      1
+94bO-IX0xwY      1
+974m-fpf9lY      1
+9b8l-rf2ri4      1
+9dgpTv_Fl5A      1
+9G-D-IJzmeM      1
+9GH7-kjw0ng      1
+9IHb-wBW4xA      1
+9IqF-wyZsoE      1
+9MCi-UkWi9o      1
+9oJL-RVnVmI      1
+9QUp-UOhTnE      1
+9S1h-c6DH9c      1
+9Sbo-24_oPQ      1
+9sfr-KuoizY      1
+9TpR-67fWfU      1
+9Ulf-GunbHE      1
+9wVP-GUrvMc      1
+EjXd-iJnQDA      1
+eLf9-E3XkaU      1
+mE95-5vYSCI      1
+JSg1-KfPdNA      1
+JF6n-6gfFGs      1
+jfDi-9foZOU      1
+Jhr7-Y_lAwE      1
+jJZL-s3Xc9g      1
+jkkv-6qrbXk      1
+JkN9-bhUPhk      1
+jLuy-7egJ2U      1
+JLyd-AXCi-I      1
+j_M3-HgfI14      1
+jmS8-d3pyNA      1
+jmtt-hMgKaU      1
+JNs6-GkRJ20      1
+JOaH-JxqtYM      1
+JTgs-QhNl38      1
+JCqP-O319tY      1
+Jv2e-drVaJo      1
+JWnN-_ypD6s      1
+jwq0-hKIibU      1
+JWYt-Bawe7k      1
+Jxmp-zim8EA      1
+jxVx-Rzp50w      1
+jyf1-Bku9aw      1
+k0-4-cFqVB8      1
+K0qNp2W3YBI      1
+K1Rg-avN4_8      1
+k26V-Rv-_vc      1
+K2Pr-Rn6atg      1
+K5Fl-xkLuk0      1
+jers-tIOetQ      1
+jBP_-b7qqLc      1
+K9Omkt04C6M      1
+iVFj-qiilDs      1
+Inlj-BMCAAo      1
+INMB-nVzEIs      1
+iNvG--Q1Zus      1
+Iolv-DIyGlY      1
+IozN-wDQnh0      1
+ipLk-wkTYjY      1
+iq5M-CJAeSc      1
+iQY_-sdNxIk      1
+iS1q-FUswXg      1
+Is8h-j2Fcao      1
+ispA-ycUBss      1
+iTPy-mie0iE      1
+iuFA-FnDAAA      1
+ivME-8jG9p8      1
+JbFA-r50-cc      1
+iWBE-V-S68o      1
+ix3JrAyV4CU      1
+iX9WRbcG8-M      1
+-IXJq-6YEw8      1
+IY3I-f_zAmY      1
+IYNg-aewROU      1
+iz7Y-TxUFho      1
+izTP1e8vCBA      1
+izUX--BvX0M      1
+j1P-GEHUnf0      1
+j4Pu-GIXAHk      1
+j9Js-BGLA3E      1
+Ja-c-6yLFTE      1
+K9i0-2KcvlE      1
+KBOs-CU_XjU      1
+elsr-jXgljs      1
+lWxf-g5vQv4      1
+LM_G-ot8sGA      1
+lNpW-6J9Tu0      1
+LNTU-CGu7xI      1
+LNzo-cM2ggU      1
+LnZSX3UOFE8      1
+L-OB-NnVFfQ      1
+lP4_-uCh_JA      1
+LqIA-EKOvpM      1
+LqMj-Ufzq90      1
+lReD-gFWqCM      1
+lrUk-WlIQTw      1
+lUkm-CLzhZs      1
+LV0j-I6H1wI      1
+LXtG-3h6GUQ      1
+LKds-jO1tyE      1
+LZEj-D93fgc      1
+lzUE-4NxZ-s      1
+m02y-MrYUts      1
+M2KL-hOasDQ      1
+m3iO-dIBlIY      1
+M4HnTxc1RPE      1
+M4mH-kfUuTQ      1
+m6DI-1DesQ4      1
+M7H0-U-Ks0U      1
+MAxk-VKMuXI      1
+mbO7-N1jRvg      1
+Md_h-VhyOLE      1
+mDOQ3dVMuBQ      1
+lKuE-ZoyTLU      1
+LIxE-byQozM      1
+kCSF-vimj7c      1
+kpmq-WwK-vY      1
+Kebl-anOsmM      1
+KECJ-TOPCws      1
+KFpc-G79iXw      1
+kFYs-qcGPO4      1
+KG93-kTD5ZQ      1
+kI8h-e4iOgs      1
+kInr-7IEqSA      1
+kjO9-wiXBF0      1
+KlpM-TAWnQY      1
+_kMY-KjwO_U      1
+kNiu-Go0eQ0      1
+kNR-XszMR5U      1
+KOJfEpYFkKo      1
+kQ95-i-UqAM      1
+LIi6-oXl1Lo      1
+Ks_P-KH4CM4      1
+KX09-9vHi44      1
+KXKX-6rhn-c      1
+k_zm-MBKVEw      1
+l1fI-z8DWlI      1
+l1xd-AaNZL4      1
+l7LR-8Samf4      1
+L88a-HvkNiw      1
+l8Za-Bp3VfE      1
+l9r8-mSQD18      1
+lcsB-Wh4szM      1
+lE3b-THRfbs      1
+LgAZ-OwU8cc      1
+InJt-REz-6g      1
+Ilgo-7KV65E      1
+IkYoc0Fa7yw      1
+FGkG-vipxRY      1
+F7HM-cbvB0g      1
+f8eI-qCcZkk      1
+f8eU-yxniaw      1
+FB9-dDXy9vs      1
+Fb_B-TJD6G8      1
+Fb-e-hxXSCk      1
+fBQG-oVQVHU      1
+FBY-vdMD6-k      1
+fcgT-VvaM34      1
+Fd8L-zQMtZA      1
+FE5C-019DS8      1
+Felf-WKvNls      1
+FFjs-yP0PZ0      1
+FGvc-13FnUs      1
+f5fb-XsCuCk      1
+fH-j-3TbbSM      1
+fKFZ-2CwPSg      1
+flYUouQmAIY      1
+fMs2OFMlTEo      1
+fN-C-RHZWTk      1
+fngR-8SRo5c      1
+fNPS-ClUxbQ      1
+fq1I-1cTI6Y      1
+fRz8-4HRBfU      1
+F_tM-m8nvG4      1
+FUq0--xoixI      1
+Futdf6Lqdf0      1
+fW43-vBLwdI      1
+f5OZ-LjgAVw      1
+F4tT-6gsmUU      1
+ikpu-DLZjS4      1
+eum6-CRI3Ng      1
+EmDo-8lM1U0      1
+EMkU-jPU56w      1
+EmMp-KKNBOM      1
+EmUu-oQbUOU      1
+eQ3D-RNLtbs      1
+ER2d-amL4sg      1
+ErAk-iweywU      1
+eS5f-AQYGck      1
+esaG-L1HSNI      1
+ESQH-XPs5MY      1
+ESwQ-ArGFOM      1
+eU7g-KDfkfM      1
+EuCz-srDW-M      1
+EuPA-6S5Z0c      1
+F4hN-YfdOqk      1
+Ev9f-Ugwf9k      1
+Ewh4-tOPwFs      1
+ewIx-QIYkH8      1
+EX5m-6f2hx4      1
+ExEU-7VJcVM      1
+eXPQ-tVpNqQ      1
+eYyd-pf3oMg      1
+eZwt-FLaktU      1
+EZYg-vZ_xTM      1
+F055-aHUPVc      1
+f14V-u0XHCU      1
+F3kT-4iLun0      1
+_f44-3-iIc0      1
+F_XA-0TYYiI      1
+fyyT-vaGmgE      1
+G0uM-WpVL60      1
+hWGw-ILCD14      1
+Hgim-rP3r8s      1
+Hhr_-i5uj98      1
+hIEO-VfT-98      1
+HIOR-xG0nWQ      1
+hmJy-JUxezU      1
+HOBj-zd9Has      1
+hOcV-Tb9Z9Q      1
+hPZL-7eJSu8      1
+hQJs-OGzJqQ      1
+HrVQ-q4gqBc      1
+h_Rx-nwmeE8      1
+HSkV-shegrs      1
+HtoX-tIaRlU      1
+I1nP-NOaxJw      1
+g2rS-GqChN8      1
+I3ko-QkwyfI      1
+i4bJ-IXlpE4      1
+I-6N-5WFUPk      1
+Ib5I-EeUU9A      1
+IBBK-hqnZqQ      1
+Ibjd-a8dYbU      1
+iBMB-kHcd7U      1
+IbOk-hvv84w      1
+IcsF-1qnoz4      1
+IEhz-Kt1fOk      1
+iFSH-YZXKyI      1
+iIcV-kumrMc      1
+IKgM-Q8GW90      1
+HDRU-XXTB1s      1
+Hb3Y-GrgTAg      1
+hAgnnpyBzI0      1
+h7Yi-30Hu0g      1
+G3w3-Xpj3G8      1
+_G9DqKR_ZUk      1
+gAoV-Zc2XHc      1
+GbNH-UFEyYw      1
+gdAj-z_Kxc4      1
+gErO-OuSaA0      1
+gFuN-H10tm8      1
+GGZ_-nvl4ak      1
+Gj1-W33od6c      1
+GkWC-JMpeOI      1
+GL8p-lf1Q9g      1
+gM3bYFo1k_A      1
+gmoc-UuNZT8      1
+gNNN-DRnTN4      1
+goPf-DqQltk      1
+GQUX-3ToLmM      1
+gS8k-NdPBWQ      1
+GT0Z-XXTjiY      1
+GTzd-4vdQQU      1
+gUIu-hDcGrQ      1
+gWZ8-pqXRbo      1
+GxEE-GCJMis      1
+gXMM-6JhDzE      1
+GXn0-yo-L0I      1
+gZDG-8Te3tg      1
+h52Y-SSyvoM      1
+H5ae-PJpkwI      1
+zZKo-QsY86U      1
+
+Feature: codec
+codec
+h264     31545
+vp8      18387
+mpeg4    12012
+flv       6840
+
+Transcoding time by category:
+       count       mean  median        std
+codec                                     
+h264   31545  10.924879   5.080  16.769898
+vp8    18387  10.332705   4.816  16.202426
+flv     6840   9.777908   3.662  17.180853
+mpeg4  12012   7.167469   2.548  12.915158
+
+Feature: o_codec
+o_codec
+mpeg4    17291
+vp8      17277
+flv      17135
+h264     17081
+
+Transcoding time by category:
+         count       mean  median        std
+o_codec                                     
+h264     17081  21.141200  11.057  25.958792
+vp8      17277  11.168765   6.304  11.983776
+mpeg4    17291   5.260257   3.912   3.944548
+flv      17135   2.483721   1.532   2.238606
+
+8. VIDEO CHARACTERISTICS ANALYSIS
+
+Output resolution analysis:
+                   count       mean  median
+output_resolution                          
+1920x1080          11459  26.782354  16.137
+1280x720           11451  14.754400   9.745
+640x480            11460   7.232060   5.032
+480x360            11467   5.263470   3.872
+320x240            11473   3.510528   2.744
+176x144            11474   2.459972   1.880
+
+9. ID AND DATA LEAKAGE INVESTIGATION
+
+Unique video IDs: 1099
+Repeated video IDs: 81
+Maximum records per video: 841
+
+Video ID frequency distribution:
+count
+1      1018
+486       1
+841      80
+
+Correlation between memory usage and transcoding time: 0.6633
+WARNING: umem is an outcome measured during transcoding. Exclude it from the primary pre-transcoding prediction model.
+
+IMPORTANT: Features such as frames, i, p, i_size, p_size and size may require analysing the source video. They are not necessarily available from basic user inputs.
+
+10. HIGHLY CORRELATED FEATURE PAIRS
+Feature 1 Feature 2  Correlation
+    width    height     0.990467
+        p    frames     0.999844
+   p_size      size     0.998433
+  o_width  o_height     0.994492
+
+11. INVALID VALUE CHECKS
+duration: 0 zero or negative values
+width: 0 zero or negative values
+height: 0 zero or negative values
+bitrate: 0 zero or negative values
+framerate: 0 zero or negative values
+frames: 0 zero or negative values
+size: 0 zero or negative values
+o_bitrate: 0 zero or negative values
+o_framerate: 0 zero or negative values
+o_width: 0 zero or negative values
+o_height: 0 zero or negative values
+utime: 0 zero or negative values
+
+Rows where I + P + B frames do not equal total frames: 0
