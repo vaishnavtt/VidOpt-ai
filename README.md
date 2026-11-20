@@ -8,7 +8,7 @@
 [![XGBoost](https://img.shields.io/badge/XGBoost-2.0+-EB5424?style=flat&logoColor=white)](https://xgboost.readthedocs.io/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-VidOpt AI is an end-to-end machine learning system and full-stack analytics platform designed to predict video transcoding duration (`utime`) prior to job execution. By accurately forecasting processing times from container metadata and output configurations, VidOpt AI enables intelligent compute scheduling, queue prioritization, spot instance cost optimization, and transparent user wait estimates.
+VidOpt AI is an end-to-end machine learning platform designed to forecast video transcoding processing times (`utime`) prior to execution. By estimating transcoding duration from media container metadata and output configurations, VidOpt AI enables intelligent compute scheduling, queue prioritization, cloud spot instance cost optimization, and transparent user wait estimates.
 
 ---
 
@@ -16,6 +16,7 @@ VidOpt AI is an end-to-end machine learning system and full-stack analytics plat
 
 - [Problem Statement](#problem-statement)
 - [Main Capabilities](#main-capabilities)
+- [Application Screenshots](#application-screenshots)
 - [System Architecture](#system-architecture)
 - [Machine Learning Methodology](#machine-learning-methodology)
 - [Empirical Model Evaluation](#empirical-model-evaluation)
@@ -57,7 +58,37 @@ VidOpt AI solves this by predicting transcoding time with gradient-boosted decis
 
 ---
 
+## Application Screenshots
+
+### 1. Main Dashboard
+Overview of the transcoding forecaster, backend connection status, and comparative model metrics.
+![VidOpt AI Dashboard](screenshots/dashboard.png)
+
+### 2. Video Analysis & Output Configuration
+Upload interface and output profile configuration with resolution, bitrate, and codec selectors.
+![VidOpt AI Video Analysis Interface](screenshots/video-analysis.png)
+
+### 3. Prediction Results
+Real-time transcoding duration estimate, formatted runtime, realtime factor, and job details.
+![VidOpt AI Prediction Results](screenshots/prediction-results.png)
+
+### 4. Model Insights & Performance Analytics
+Interactive model comparison charts (MAE, RMSE, $R^2$), feature importance, and error distribution breakdown.
+![VidOpt AI Model Insights & Analytics](screenshots/model-insights.png)
+
+### 5. Prediction History
+Local browser cache of recent predictions with search, filter, and item deletion capabilities.
+![VidOpt AI Prediction History](screenshots/prediction-history.png)
+
+### 6. Project Information & Architecture
+Comprehensive overview of project methodology, hardware baselines, and scientific considerations.
+![VidOpt AI Project Overview](screenshots/about.png)
+
+---
+
 ## System Architecture
+
+![VidOpt AI System Architecture](screenshots/architecture.png)
 
 ```text
 ┌────────────────────────────────────────────────────────┐
@@ -183,9 +214,19 @@ video_transcoding/
 │   ├── plots/                        # Generated evaluation charts
 │   ├── model_comparison.csv          # Evaluation metrics table
 │   └── error_analysis.csv
+├── screenshots/
+│   ├── about.png                     # Project overview screenshot
+│   ├── architecture.png              # System architecture diagram
+│   ├── dashboard.png                 # Main dashboard screenshot
+│   ├── model-insights.png            # Model analytics screenshot
+│   ├── prediction-history.png        # Prediction history screenshot
+│   ├── prediction-results.png        # Prediction result display screenshot
+│   └── video-analysis.png            # Video analysis interface screenshot
 ├── scripts/
+│   ├── capture_screenshots.js        # Automated screenshot capture utility
 │   ├── compare_models.py             # Model benchmark comparison script
 │   ├── error_analysis.py             # Residual and error breakdown script
+│   ├── generate_architecture_diagram.py # Architecture diagram generator
 │   ├── metadata_model.py             # 11-feature model training script
 │   ├── ml_utils.py                   # Shared ML inference utilities
 │   ├── ml_verification.py            # 10-point ML test suite
