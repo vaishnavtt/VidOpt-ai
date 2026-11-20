@@ -3,12 +3,11 @@ import { Link } from 'react-router-dom';
 import {
   History,
   Trash2,
-  ExternalLink,
   Clock,
   Video,
-  ArrowRight,
   Search,
-  Filter,
+  ArrowRight,
+  Sparkles,
 } from 'lucide-react';
 import {
   getPredictionHistory,
@@ -49,28 +48,31 @@ export const PredictionHistory: React.FC = () => {
   });
 
   return (
-    <div className="max-w-6xl mx-auto space-y-6">
+    <div className="relative min-h-screen pt-28 pb-16 px-4 sm:px-6 lg:px-8 max-w-6xl mx-auto space-y-8 animate-in fade-in duration-300">
       {/* Header and Controls */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-6 sm:p-8 rounded-3xl bg-[rgba(255,255,255,0.06)] border border-[rgba(255,255,255,0.14)] backdrop-blur-2xl shadow-xl">
         <div>
-          <h2 className="text-xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
-            <History className="w-5 h-5 text-indigo-600" />
-            Transcoding Prediction History
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-cyan-300 text-xs font-semibold mb-2">
+            <History className="w-3.5 h-3.5" />
+            Transcoding Records
+          </div>
+          <h2 className="text-2xl font-medium tracking-tight text-[#eef0f6]">
+            Prediction History
           </h2>
-          <p className="text-xs text-slate-500 mt-1">
-            Locally stored previous prediction calculations ({history.length} records).
+          <p className="text-xs text-[#b9becf] mt-0.5">
+            Locally stored previous transcoding calculations ({history.length} records).
           </p>
         </div>
 
         <div className="flex items-center gap-3">
           <div className="relative">
-            <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+            <Search className="w-4 h-4 text-[#b9becf] absolute left-3.5 top-1/2 -translate-y-1/2" />
             <input
               type="text"
               placeholder="Filter by name, resolution, codec..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9 pr-4 py-2 rounded-xl border border-slate-200 text-xs font-medium focus:ring-2 focus:ring-indigo-500 focus:outline-hidden w-64 bg-slate-50"
+              className="pl-10 pr-4 py-2.5 rounded-full border border-[rgba(255,255,255,0.15)] text-xs font-medium focus:ring-2 focus:ring-cyan-400 focus:outline-hidden w-64 bg-[rgba(255,255,255,0.06)] text-[#eef0f6] placeholder-[#b9becf]/60"
             />
           </div>
 
@@ -78,10 +80,10 @@ export const PredictionHistory: React.FC = () => {
             <button
               type="button"
               onClick={handleClear}
-              className="px-3.5 py-2 rounded-xl border border-rose-200 text-rose-600 hover:bg-rose-50 font-semibold text-xs transition-colors inline-flex items-center gap-1.5"
+              className="px-4 py-2.5 rounded-full border border-rose-500/30 bg-rose-500/10 text-rose-300 hover:bg-rose-500/20 font-medium text-xs transition-colors inline-flex items-center gap-1.5 cursor-pointer"
             >
               <Trash2 className="w-3.5 h-3.5" />
-              Clear History
+              Clear All
             </button>
           )}
         </div>
@@ -89,24 +91,24 @@ export const PredictionHistory: React.FC = () => {
 
       {/* History Table / Empty State */}
       {filteredHistory.length === 0 ? (
-        <div className="bg-white rounded-3xl border border-slate-200/80 p-12 text-center space-y-4 shadow-xs">
-          <div className="w-16 h-16 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center mx-auto">
-            <Clock className="w-8 h-8 stroke-[1.8]" />
+        <div className="rounded-3xl p-12 sm:p-16 text-center space-y-4 bg-[rgba(255,255,255,0.06)] border border-[rgba(255,255,255,0.14)] backdrop-blur-2xl shadow-xl">
+          <div className="w-16 h-16 rounded-full bg-[rgba(255,255,255,0.08)] border border-[rgba(255,255,255,0.16)] text-cyan-300 flex items-center justify-center mx-auto shadow-xl">
+            <Clock className="w-7 h-7 stroke-[1.8]" />
           </div>
           <div className="space-y-1 max-w-sm mx-auto">
-            <h3 className="font-bold text-slate-800 text-base">
+            <h3 className="font-medium text-[#eef0f6] text-lg">
               {searchQuery ? 'No matching predictions found' : 'No predictions yet'}
             </h3>
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-[#b9becf] leading-relaxed">
               {searchQuery
                 ? 'Try a different filter term or reset the search input.'
-                : 'Run your first video transcoding prediction to see historical records here.'}
+                : 'Upload a video or select a preset to generate your first ML transcoding time prediction.'}
             </p>
           </div>
           {!searchQuery && (
             <Link
-              to="/analyze"
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-indigo-600 text-white font-semibold text-xs hover:bg-indigo-700 transition-colors shadow-xs"
+              to="/"
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-white text-[#2f2f33] hover:bg-[#eef0f6] font-medium text-xs shadow-lg transition-all cursor-pointer"
             >
               <Video className="w-4 h-4" />
               Analyze Video Now &rarr;
@@ -114,10 +116,10 @@ export const PredictionHistory: React.FC = () => {
           )}
         </div>
       ) : (
-        <div className="bg-white rounded-3xl border border-slate-200/80 shadow-xs overflow-hidden">
+        <div className="rounded-3xl border border-[rgba(255,255,255,0.14)] bg-[rgba(255,255,255,0.06)] backdrop-blur-2xl shadow-xl overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
-              <thead className="bg-slate-50 text-slate-500 uppercase tracking-wider font-semibold border-b border-slate-100">
+              <thead className="bg-[rgba(255,255,255,0.04)] text-[#b9becf] uppercase tracking-wider font-semibold border-b border-[rgba(255,255,255,0.1)]">
                 <tr>
                   <th className="px-6 py-4">Video / Job</th>
                   <th className="px-6 py-4">Source &rarr; Target</th>
@@ -128,43 +130,43 @@ export const PredictionHistory: React.FC = () => {
                   <th className="px-6 py-4 text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-[rgba(255,255,255,0.08)]">
                 {filteredHistory.map((item) => (
-                  <tr key={item.id} className="hover:bg-slate-50/70 transition-colors">
-                    <td className="px-6 py-4 font-semibold text-slate-800">
+                  <tr key={item.id} className="hover:bg-[rgba(255,255,255,0.04)] transition-colors">
+                    <td className="px-6 py-4 font-medium text-[#eef0f6]">
                       <div className="truncate max-w-xs">{item.videoName}</div>
-                      <div className="text-[11px] text-slate-400 font-normal">
+                      <div className="text-[11px] text-[#b9becf]/70 font-normal">
                         {new Date(item.timestamp).toLocaleString()}
                       </div>
                     </td>
-                    <td className="px-6 py-4 font-medium text-slate-600">
+                    <td className="px-6 py-4 font-medium text-[#b9becf]">
                       {item.sourceResolution} &rarr;{' '}
-                      <span className="font-bold text-slate-800">
+                      <span className="font-semibold text-[#eef0f6]">
                         {item.outputResolution}
                       </span>
                     </td>
-                    <td className="px-6 py-4 font-medium text-slate-600">
+                    <td className="px-6 py-4 font-medium text-[#b9becf]">
                       {item.sourceCodec} &rarr; {item.outputCodec}
                     </td>
-                    <td className="px-6 py-4 font-medium text-slate-700">
+                    <td className="px-6 py-4 font-medium text-[#eef0f6]">
                       {item.durationSeconds} s
                     </td>
                     <td className="px-6 py-4">
-                      <span className="font-bold text-indigo-600 text-sm">
+                      <span className="font-semibold text-cyan-300 text-sm">
                         {item.estimatedTimeSeconds.toFixed(2)} s
                       </span>
-                      <span className="block text-[11px] text-slate-400">
+                      <span className="block text-[11px] text-[#b9becf]/70">
                         {item.modelName}
                       </span>
                     </td>
-                    <td className="px-6 py-4 font-bold text-slate-700">
+                    <td className="px-6 py-4 font-semibold text-[#eef0f6]">
                       {item.realtimeFactor}×
                     </td>
                     <td className="px-6 py-4 text-right">
                       <button
                         type="button"
                         onClick={() => handleDelete(item.id)}
-                        className="p-1.5 text-slate-400 hover:text-rose-600 rounded-lg hover:bg-rose-50 transition-colors"
+                        className="p-2 text-[#b9becf] hover:text-rose-400 rounded-lg hover:bg-rose-500/10 transition-colors cursor-pointer"
                         title="Delete record"
                       >
                         <Trash2 className="w-4 h-4" />

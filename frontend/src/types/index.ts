@@ -77,6 +77,7 @@ export interface VideoMetadataResponse {
   codec?: string;
   bitrate?: number;
   framerate?: number;
+  frames?: number;
   size_bytes?: number;
   format_name?: string;
   message: string;

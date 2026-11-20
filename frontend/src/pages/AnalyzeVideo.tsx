@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Upload,
   Video,
@@ -12,24 +12,27 @@ import {
   Sliders,
   FileVideo,
   Info,
-  Save,
   Check,
-  ChevronDown,
+  RefreshCw,
+  Layers,
+  ArrowUpRight,
 } from 'lucide-react';
 import {
   analyzeVideo,
   configureTranscoding,
   predictMetadata,
   getOptions,
+  checkHealth,
 } from '../services/api';
 import { savePredictionToHistory } from '../utils/history';
+import { StaggeredText } from '../components/common/StaggeredText';
 import type {
   MetadataPredictionRequest,
   PredictionResponse,
   VideoMetadataResponse,
 } from '../types';
 
-// Preset configurations for fast testing and manual exploration
+// Preset configurations for instant testing and exploration
 const SOURCE_PRESETS = [
   {
     name: '1080p FHD (2 min, H.264)',
@@ -39,6 +42,8 @@ const SOURCE_PRESETS = [
     bitrate: 5000000,
     framerate: 29.97,
     codec: 'h264',
+    frames: 3596,
+    size_bytes: 75000000,
   },
   {
     name: '720p HD (1 min, H.264)',
@@ -48,6 +53,8 @@ const SOURCE_PRESETS = [
     bitrate: 2500000,
     framerate: 30,
     codec: 'h264',
+    frames: 1800,
+    size_bytes: 18750000,
   },
   {
     name: '4K UHD (30 sec, H.264)',
@@ -57,6 +64,8 @@ const SOURCE_PRESETS = [
     bitrate: 15000000,
     framerate: 60,
     codec: 'h264',
+    frames: 1800,
+    size_bytes: 56250000,
   },
   {
     name: '480p SD (3 min, MPEG-4)',
@@ -66,6 +75,8 @@ const SOURCE_PRESETS = [
     bitrate: 1000000,
     framerate: 25,
     codec: 'mpeg4',
+    frames: 4500,
+    size_bytes: 22500000,
   },
 ];
 
@@ -79,9 +90,25 @@ const TARGET_PRESETS = [
 export const AnalyzeVideo: React.FC = () => {
   // Step indicator: 1 = Source Selection, 2 = Target Config, 3 = Prediction Result
   const [step, setStep] = useState<number>(1);
+  const [mounted, setMounted] = useState(false);
+
+  // File input ref for Browse button
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isDragging, setIsDragging] = useState<boolean>(false);
 
   // Source metadata state
-  const [sourceData, setSourceData] = useState({
+  const [sourceData, setSourceData] = useState<{
+    videoName: string;
+    duration: number;
+    width: number;
+    height: number;
+    bitrate: number;
+    framerate: number;
+    codec: string;
+    frames?: number;
+    size_bytes?: number;
+    format_name?: string;
+  }>({
     videoName: 'sample_video.mp4',
     duration: 120,
     width: 1920,
@@ -89,6 +116,9 @@ export const AnalyzeVideo: React.FC = () => {
     bitrate: 5000000,
     framerate: 29.97,
     codec: 'h264',
+    frames: 3596,
+    size_bytes: 75000000,
+    format_name: 'mov,mp4,m4a,3gp,3g2,mj2',
   });
 
   // Target metadata state
@@ -109,11 +139,17 @@ export const AnalyzeVideo: React.FC = () => {
   const [predicting, setPredicting] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [ffprobeMissingNotice, setFfprobeMissingNotice] = useState<boolean>(false);
+  const [checkingHealth, setCheckingHealth] = useState<boolean>(false);
   const [validationWarnings, setValidationWarnings] = useState<string[]>([]);
   const [savedToHistory, setSavedToHistory] = useState<boolean>(false);
 
   // Prediction result state
   const [predictionResult, setPredictionResult] = useState<PredictionResponse | null>(null);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setMounted(true), 20);
+    return () => clearTimeout(timer);
+  }, []);
 
   // Fetch backend options on load
   useEffect(() => {
@@ -127,6 +163,22 @@ export const AnalyzeVideo: React.FC = () => {
         console.warn('Could not load dynamic options, using defaults.', err);
       });
   }, []);
+
+  // Re-check server health to clear missing notice if FFprobe is installed
+  const handleCheckHealth = async () => {
+    setCheckingHealth(true);
+    try {
+      const health = await checkHealth();
+      if (health.ffprobe_available) {
+        setFfprobeMissingNotice(false);
+        setErrorMessage(null);
+      }
+    } catch {
+      // Ignore
+    } finally {
+      setCheckingHealth(false);
+    }
+  };
 
   // Handle file drop / upload
   const handleFileUpload = async (file: File) => {
@@ -151,6 +203,9 @@ export const AnalyzeVideo: React.FC = () => {
           bitrate: data.bitrate || 4000000,
           framerate: data.framerate ? parseFloat(data.framerate.toFixed(2)) : 30,
           codec: (data.codec || 'h264').toLowerCase(),
+          frames: data.frames,
+          size_bytes: data.size_bytes || file.size,
+          format_name: data.format_name,
         });
         setStep(2);
       }
@@ -159,12 +214,13 @@ export const AnalyzeVideo: React.FC = () => {
       const detail = err.response?.data?.detail;
 
       if (status === 503) {
-        // FFprobe not installed on server
         setFfprobeMissingNotice(true);
         setSourceData((prev) => ({ ...prev, videoName: file.name }));
       } else {
         setErrorMessage(
-          detail || 'Failed to upload and analyze video file. Please check file format.'
+          typeof detail === 'string'
+            ? detail
+            : 'Failed to upload and analyze video file. Please check file format.'
         );
       }
     } finally {
@@ -256,592 +312,673 @@ export const AnalyzeVideo: React.FC = () => {
     setValidationWarnings([]);
   };
 
+  const formatFileSize = (bytes?: number): string => {
+    if (!bytes || bytes <= 0) return 'Unknown';
+    if (bytes >= 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
+    return `${(bytes / 1024).toFixed(1)} KB`;
+  };
+
   return (
-    <div className="max-w-5xl mx-auto space-y-8">
-      {/* Progress Steps Header */}
-      <div className="bg-white rounded-2xl border border-slate-200/80 p-4 shadow-xs">
-        <div className="flex items-center justify-between max-w-2xl mx-auto">
-          <div
-            className={`flex items-center gap-2.5 ${
-              step >= 1 ? 'text-indigo-600 font-bold' : 'text-slate-400'
-            }`}
-          >
-            <div
-              className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold ${
-                step >= 1 ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-400'
-              }`}
-            >
-              1
-            </div>
-            <span className="text-sm hidden sm:inline">Source Video</span>
-          </div>
+    <div className="relative min-h-screen flex flex-col items-center justify-center pt-24 pb-16 px-4 sm:px-6 lg:px-8 text-center max-w-5xl mx-auto">
+      {/* Central Hero Header */}
+      <div className="space-y-4 mb-8 sm:mb-12">
+        {/* Badge: delay 320ms, translateY(1.25rem) to 0, opacity 0 to 1 */}
+        <div
+          style={{
+            opacity: mounted ? 1 : 0,
+            transform: mounted ? 'translateY(0)' : 'translateY(1.25rem)',
+            transition: 'opacity 700ms cubic-bezier(0.2, 0, 0, 1) 320ms, transform 700ms cubic-bezier(0.2, 0, 0, 1) 320ms',
+          }}
+          className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[rgba(255,255,255,0.08)] border border-[rgba(255,255,255,0.16)] backdrop-blur-md shadow-lg"
+        >
+          <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
+          <span className="text-[11px] font-semibold tracking-widest uppercase text-cyan-300">
+            AI-POWERED TRANSCODING INTELLIGENCE
+          </span>
+        </div>
 
-          <div
-            className={`h-0.5 w-12 sm:w-20 ${
-              step >= 2 ? 'bg-indigo-600' : 'bg-slate-200'
-            }`}
+        {/* Main Heading: word-by-word reveal starting at 480ms */}
+        <div className="pt-2">
+          <StaggeredText
+            as="h1"
+            type="heading"
+            baseDelayMs={480}
+            text="Predict Video Transcoding Time with AI"
+            className="text-4xl sm:text-5xl lg:text-6xl font-medium tracking-tight text-[#eef0f6] leading-[1.12]"
           />
+        </div>
 
-          <div
-            className={`flex items-center gap-2.5 ${
-              step >= 2 ? 'text-indigo-600 font-bold' : 'text-slate-400'
-            }`}
-          >
-            <div
-              className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold ${
-                step >= 2 ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-400'
-              }`}
-            >
-              2
-            </div>
-            <span className="text-sm hidden sm:inline">Output Target</span>
-          </div>
-
-          <div
-            className={`h-0.5 w-12 sm:w-20 ${
-              step >= 3 ? 'bg-indigo-600' : 'bg-slate-200'
-            }`}
+        {/* Supporting text: word-by-word reveal starting at 1150ms */}
+        <div>
+          <StaggeredText
+            as="p"
+            type="supporting"
+            baseDelayMs={1150}
+            text="Analyze your video, configure output settings, and estimate transcoding duration using machine learning."
+            className="text-sm sm:text-base text-[#b9becf] max-w-2xl mx-auto font-normal leading-relaxed"
           />
-
-          <div
-            className={`flex items-center gap-2.5 ${
-              step >= 3 ? 'text-indigo-600 font-bold' : 'text-slate-400'
-            }`}
-          >
-            <div
-              className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold ${
-                step >= 3 ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-400'
-              }`}
-            >
-              3
-            </div>
-            <span className="text-sm hidden sm:inline">ML Prediction</span>
-          </div>
         </div>
       </div>
 
-      {/* Global Error Banner */}
-      {errorMessage && (
-        <div className="p-4 rounded-2xl bg-rose-50 border border-rose-200 flex items-start gap-3 text-rose-800 text-sm">
-          <AlertCircle className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
-          <div className="flex-1">
-            <p className="font-semibold">Error</p>
-            <p className="text-xs text-rose-700 mt-0.5">{errorMessage}</p>
-          </div>
-        </div>
-      )}
-
-      {/* ========================================================================= */}
-      {/* STEP 1: SOURCE VIDEO SELECTION                                            */}
-      {/* ========================================================================= */}
-      {step === 1 && (
-        <div className="space-y-6">
-          {/* Notice if FFprobe not in path */}
-          {ffprobeMissingNotice && (
-            <div className="p-5 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 text-xs sm:text-sm space-y-2">
-              <div className="flex items-center gap-2 font-bold text-amber-800">
-                <Info className="w-4 h-4 text-amber-600" />
-                FFprobe binary not detected in server PATH
+      {/* Main Interaction Glass Interface: delay 1450ms */}
+      <div
+        className="w-full"
+        style={{
+          opacity: mounted ? 1 : 0,
+          transform: mounted ? 'translateY(0)' : 'translateY(1.25rem)',
+          transition: 'opacity 700ms cubic-bezier(0.2, 0, 0, 1) 1450ms, transform 700ms cubic-bezier(0.2, 0, 0, 1) 1450ms',
+        }}
+      >
+        {/* Global Error Banner */}
+        {errorMessage && (
+          <div className="mb-6 p-4 rounded-2xl bg-rose-950/60 border border-rose-500/30 backdrop-blur-md flex items-start justify-between gap-3 text-rose-200 text-xs sm:text-sm text-left">
+            <div className="flex items-start gap-3">
+              <AlertCircle className="w-5 h-5 text-rose-400 shrink-0 mt-0.5" />
+              <div>
+                <p className="font-semibold text-rose-100">Upload Issue</p>
+                <p className="text-xs text-rose-300/90 mt-0.5">{errorMessage}</p>
               </div>
-              <p className="text-amber-700 leading-relaxed">
-                Direct video file header decoding requires FFmpeg/FFprobe. However,
-                the ML prediction engine does not require FFprobe: you can review
-                and configure the video metadata below or pick a preset to run predictions immediately!
-              </p>
-              <div className="pt-2">
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                setErrorMessage(null);
+                fileInputRef.current?.click();
+              }}
+              className="px-3 py-1.5 rounded-full bg-rose-500/20 hover:bg-rose-500/30 text-rose-200 text-xs font-medium border border-rose-500/30 shrink-0 transition-colors cursor-pointer"
+            >
+              Retry
+            </button>
+          </div>
+        )}
+
+        {/* ========================================================================= */}
+        {/* STEP 1: SOURCE VIDEO UPLOAD & PRESETS                                     */}
+        {/* ========================================================================= */}
+        {step === 1 && (
+          <div className="space-y-6">
+            {/* Notice if FFprobe not detected */}
+            {ffprobeMissingNotice && (
+              <div className="p-5 rounded-2xl bg-amber-950/50 border border-amber-500/30 backdrop-blur-md text-amber-200 text-xs sm:text-sm space-y-3 text-left">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 font-semibold text-amber-300">
+                    <Info className="w-4 h-4 text-amber-400 shrink-0" />
+                    FFprobe binary not detected in server PATH
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleCheckHealth}
+                    disabled={checkingHealth}
+                    className="px-3 py-1 rounded-full bg-amber-500/20 hover:bg-amber-500/30 text-amber-200 font-medium text-xs inline-flex items-center gap-1.5 transition-colors disabled:opacity-50"
+                  >
+                    <RefreshCw className={`w-3 h-3 ${checkingHealth ? 'animate-spin' : ''}`} />
+                    Check Again
+                  </button>
+                </div>
+                <p className="text-amber-200/80 leading-relaxed text-xs">
+                  Direct header extraction requires FFmpeg/FFprobe. You can continue by selecting a preset below to run predictions immediately!
+                </p>
                 <button
                   type="button"
                   onClick={() => setStep(2)}
-                  className="px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-semibold text-xs transition-colors shadow-xs"
+                  className="px-4 py-2 rounded-full bg-amber-400 text-black font-semibold text-xs transition-transform hover:scale-[1.02] cursor-pointer"
                 >
-                  Continue to Output Configuration &rarr;
+                  Configure Output Target &rarr;
                 </button>
               </div>
-            </div>
-          )}
+            )}
 
-          {/* Drag & Drop Upload Zone */}
-          <div className="bg-white rounded-3xl border-2 border-dashed border-slate-200 p-8 sm:p-12 text-center hover:border-indigo-400 transition-colors">
-            <input
-              type="file"
-              id="video-upload"
-              accept=".mp4,.mkv,.avi,.mov,.webm,.flv,.ts,.m4v"
-              className="hidden"
-              onChange={(e) => {
-                if (e.target.files && e.target.files[0]) {
-                  handleFileUpload(e.target.files[0]);
+            {/* Drag & Drop Upload Zone */}
+            <div
+              onDragOver={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setIsDragging(true);
+              }}
+              onDragEnter={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setIsDragging(true);
+              }}
+              onDragLeave={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setIsDragging(false);
+              }}
+              onDrop={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setIsDragging(false);
+                if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+                  handleFileUpload(e.dataTransfer.files[0]);
                 }
               }}
-            />
-            <label
-              htmlFor="video-upload"
-              className="cursor-pointer flex flex-col items-center justify-center space-y-4"
+              className={`rounded-3xl border-2 border-dashed p-8 sm:p-14 text-center transition-all backdrop-blur-2xl ${
+                isDragging
+                  ? 'border-cyan-400 bg-cyan-500/10 shadow-2xl shadow-cyan-500/20 scale-[1.01]'
+                  : 'border-[rgba(255,255,255,0.18)] bg-[rgba(255,255,255,0.05)] hover:border-cyan-400/60 hover:bg-[rgba(255,255,255,0.07)]'
+              }`}
             >
-              <div className="w-16 h-16 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center shadow-xs">
-                <Upload className="w-8 h-8 stroke-[1.8]" />
-              </div>
-              <div className="space-y-1">
-                <p className="text-base font-bold text-slate-800">
-                  {uploading
-                    ? `Uploading & Inspecting... ${uploadProgress}%`
-                    : 'Upload video file to extract metadata'}
-                </p>
-                <p className="text-xs text-slate-400">
-                  Supports MP4, MKV, AVI, MOV, WEBM, FLV (up to 500 MB)
-                </p>
-              </div>
-              <span className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs transition-colors">
-                Browse Video Files
-              </span>
-            </label>
-          </div>
+              <input
+                ref={fileInputRef}
+                type="file"
+                id="video-upload"
+                accept=".mp4,.mkv,.avi,.mov,.webm,.flv,.ts,.m4v"
+                className="hidden"
+                onChange={(e) => {
+                  if (e.target.files && e.target.files[0]) {
+                    handleFileUpload(e.target.files[0]);
+                  }
+                }}
+              />
+              <div className="flex flex-col items-center justify-center space-y-4">
+                <div className="w-16 h-16 rounded-full bg-[rgba(255,255,255,0.08)] border border-[rgba(255,255,255,0.18)] text-cyan-300 flex items-center justify-center shadow-xl">
+                  <Upload className="w-7 h-7 stroke-[1.8]" />
+                </div>
+                <div className="space-y-1">
+                  <p className="text-lg font-medium text-[#eef0f6]">
+                    {uploading
+                      ? `Uploading & Inspecting Video... ${uploadProgress}%`
+                      : 'Drop your video here or browse'}
+                  </p>
+                  <p className="text-xs text-[#b9becf]">
+                    Supports MP4, MKV, AVI, MOV, WEBM, FLV (up to 500 MB)
+                  </p>
+                </div>
 
-          {/* Fast Preset Selector */}
-          <div className="bg-white rounded-3xl border border-slate-200/80 p-6 sm:p-8 shadow-xs space-y-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-sm font-bold uppercase tracking-wider text-slate-500">
-                  Or Test Instantly with Benchmark Presets
-                </h3>
-                <p className="text-xs text-slate-400 mt-0.5">
-                  Select a common video resolution and duration profile from our dataset
-                </p>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-              {SOURCE_PRESETS.map((preset) => (
-                <button
-                  key={preset.name}
-                  type="button"
-                  onClick={() => {
-                    setSourceData({
-                      videoName: preset.name,
-                      duration: preset.duration,
-                      width: preset.width,
-                      height: preset.height,
-                      bitrate: preset.bitrate,
-                      framerate: preset.framerate,
-                      codec: preset.codec,
-                    });
-                    setStep(2);
-                  }}
-                  className="p-4 rounded-2xl border border-slate-200 hover:border-indigo-500 hover:bg-indigo-50/40 text-left transition-all group"
-                >
-                  <div className="flex items-center justify-between">
-                    <FileVideo className="w-4 h-4 text-indigo-600" />
-                    <span className="text-[11px] font-semibold text-slate-400 group-hover:text-indigo-600">
-                      Use &rarr;
+                {uploading && (
+                  <div className="w-full max-w-xs mx-auto space-y-1.5 pt-1">
+                    <div className="w-full bg-[rgba(255,255,255,0.1)] rounded-full h-2 overflow-hidden">
+                      <div
+                        className="bg-gradient-to-r from-cyan-400 to-violet-500 h-2 rounded-full transition-all duration-200"
+                        style={{ width: `${uploadProgress}%` }}
+                      />
+                    </div>
+                    <span className="text-xs text-[#b9becf] font-medium">
+                      {uploadProgress}% processed
                     </span>
                   </div>
-                  <div className="font-bold text-slate-800 text-sm mt-2">
-                    {preset.name}
-                  </div>
-                  <div className="text-xs text-slate-400 mt-1">
-                    {preset.width}×{preset.height} &bull; {preset.duration}s &bull; {preset.codec.toUpperCase()}
-                  </div>
+                )}
+
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={uploading}
+                  className="px-6 py-3 rounded-full bg-white text-[#2f2f33] hover:bg-[#eef0f6] font-medium text-xs tracking-tight shadow-lg shadow-white/10 hover:shadow-cyan-500/20 transition-all cursor-pointer disabled:opacity-50"
+                >
+                  Browse Video Files
                 </button>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ========================================================================= */}
-      {/* STEP 2: OUTPUT CONFIGURATION                                              */}
-      {/* ========================================================================= */}
-      {step === 2 && (
-        <div className="space-y-6">
-          {/* Source Metadata Review Card */}
-          <div className="bg-indigo-900 text-white rounded-3xl p-6 sm:p-8 shadow-sm space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2.5">
-                <FileVideo className="w-5 h-5 text-indigo-300" />
-                <h3 className="font-bold text-base tracking-tight">Source Video Characteristics</h3>
-              </div>
-              <button
-                type="button"
-                onClick={() => setStep(1)}
-                className="text-xs text-indigo-200 hover:text-white flex items-center gap-1 font-medium"
-              >
-                Change Source &rarr;
-              </button>
-            </div>
-
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-2">
-              <div className="bg-white/10 rounded-xl p-3">
-                <span className="text-[11px] uppercase tracking-wider text-indigo-300 block">
-                  Resolution
-                </span>
-                <span className="text-sm sm:text-base font-bold">
-                  {sourceData.width} × {sourceData.height}
-                </span>
-              </div>
-              <div className="bg-white/10 rounded-xl p-3">
-                <span className="text-[11px] uppercase tracking-wider text-indigo-300 block">
-                  Duration
-                </span>
-                <span className="text-sm sm:text-base font-bold">
-                  {sourceData.duration} seconds
-                </span>
-              </div>
-              <div className="bg-white/10 rounded-xl p-3">
-                <span className="text-[11px] uppercase tracking-wider text-indigo-300 block">
-                  Bitrate
-                </span>
-                <span className="text-sm sm:text-base font-bold">
-                  {(sourceData.bitrate / 1000000).toFixed(2)} Mbps
-                </span>
-              </div>
-              <div className="bg-white/10 rounded-xl p-3">
-                <span className="text-[11px] uppercase tracking-wider text-indigo-300 block">
-                  Codec / FPS
-                </span>
-                <span className="text-sm sm:text-base font-bold">
-                  {sourceData.codec.toUpperCase()} @ {sourceData.framerate} fps
-                </span>
               </div>
             </div>
-          </div>
 
-          {/* Target Transcoding Settings Form */}
-          <div className="bg-white rounded-3xl border border-slate-200/80 p-6 sm:p-8 shadow-xs space-y-6">
-            <div>
-              <h3 className="text-lg font-bold text-slate-900 tracking-tight flex items-center gap-2">
-                <Settings className="w-5 h-5 text-indigo-600" />
-                Target Transcoding Configuration
-              </h3>
-              <p className="text-xs text-slate-500 mt-1">
-                Configure requested target video settings for output encoding.
-              </p>
-            </div>
+            {/* Benchmark Preset Selector */}
+            <div className="p-6 sm:p-8 rounded-3xl bg-[rgba(255,255,255,0.04)] border border-[rgba(255,255,255,0.1)] backdrop-blur-xl space-y-4 text-left">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-xs font-semibold uppercase tracking-wider text-[#b9becf]">
+                    Or Test Instantly with Benchmark Presets
+                  </h3>
+                  <p className="text-xs text-[#b9becf]/70 mt-0.5">
+                    Standard video resolution and duration profiles from our 68,784 training samples
+                  </p>
+                </div>
+              </div>
 
-            {/* Target Presets */}
-            <div className="space-y-2">
-              <label className="text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                Quick Output Presets:
-              </label>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-                {TARGET_PRESETS.map((preset) => (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                {SOURCE_PRESETS.map((preset) => (
                   <button
                     key={preset.name}
                     type="button"
-                    onClick={() =>
-                      setTargetData({
-                        o_codec: preset.codec,
-                        o_width: preset.width,
-                        o_height: preset.height,
-                        o_bitrate: preset.bitrate,
-                        o_framerate: preset.framerate,
-                      })
-                    }
-                    className={`p-3 rounded-xl border text-left text-xs transition-colors ${
-                      targetData.o_width === preset.width &&
-                      targetData.o_height === preset.height &&
-                      targetData.o_codec === preset.codec
-                        ? 'border-indigo-600 bg-indigo-50/50 text-indigo-900 font-bold'
-                        : 'border-slate-200 text-slate-600 hover:bg-slate-50'
-                    }`}
+                    onClick={() => {
+                      setSourceData({
+                        videoName: preset.name,
+                        duration: preset.duration,
+                        width: preset.width,
+                        height: preset.height,
+                        bitrate: preset.bitrate,
+                        framerate: preset.framerate,
+                        codec: preset.codec,
+                        frames: preset.frames,
+                        size_bytes: preset.size_bytes,
+                        format_name: 'mp4',
+                      });
+                      setStep(2);
+                    }}
+                    className="p-4 rounded-2xl bg-[rgba(255,255,255,0.05)] border border-[rgba(255,255,255,0.1)] hover:border-cyan-400/50 hover:bg-[rgba(255,255,255,0.08)] text-left transition-all group cursor-pointer"
                   >
-                    <div>{preset.name}</div>
-                    <div className="text-[11px] text-slate-400 font-normal mt-0.5">
-                      {(preset.bitrate / 1000000).toFixed(1)} Mbps
+                    <div className="flex items-center justify-between">
+                      <FileVideo className="w-4 h-4 text-cyan-400" />
+                      <span className="text-[11px] font-medium text-[#b9becf] group-hover:text-cyan-300 transition-colors">
+                        Use &rarr;
+                      </span>
+                    </div>
+                    <div className="font-medium text-[#eef0f6] text-sm mt-2">
+                      {preset.name}
+                    </div>
+                    <div className="text-xs text-[#b9becf]/70 mt-1">
+                      {preset.width}×{preset.height} &bull; {preset.duration}s &bull; {preset.codec.toUpperCase()}
                     </div>
                   </button>
                 ))}
               </div>
             </div>
+          </div>
+        )}
 
-            {/* Input fields grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 pt-3">
-              {/* Output Codec */}
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
-                  Target Codec
-                </label>
-                <select
-                  value={targetData.o_codec}
-                  onChange={(e) =>
-                    setTargetData({ ...targetData, o_codec: e.target.value })
-                  }
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm font-medium focus:ring-2 focus:ring-indigo-500 focus:outline-hidden bg-white"
+        {/* ========================================================================= */}
+        {/* STEP 2: OUTPUT CONFIGURATION                                              */}
+        {/* ========================================================================= */}
+        {step === 2 && (
+          <div className="space-y-6 text-left">
+            {/* Source Video Metadata Review Card */}
+            <div className="rounded-3xl p-6 sm:p-8 bg-[rgba(255,255,255,0.06)] border border-[rgba(255,255,255,0.14)] backdrop-blur-2xl shadow-xl space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 flex items-center justify-center">
+                    <FileVideo className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-base text-[#eef0f6]">
+                      Extracted Video Characteristics
+                    </h3>
+                    <p className="text-xs text-[#b9becf] font-mono">{sourceData.videoName}</p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setStep(1)}
+                  className="text-xs text-cyan-300 hover:text-white px-3 py-1.5 rounded-full bg-[rgba(255,255,255,0.08)] border border-[rgba(255,255,255,0.14)] transition-colors cursor-pointer"
                 >
-                  {supportedCodecs.map((codec) => (
-                    <option key={codec} value={codec}>
-                      {codec.toUpperCase()}
-                    </option>
+                  Change Source &rarr;
+                </button>
+              </div>
+
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 pt-2">
+                <div className="bg-[rgba(255,255,255,0.05)] border border-[rgba(255,255,255,0.1)] rounded-2xl p-3">
+                  <span className="text-[10px] uppercase tracking-wider text-[#b9becf] block">
+                    Resolution
+                  </span>
+                  <span className="text-sm font-bold text-[#eef0f6]">
+                    {sourceData.width} × {sourceData.height}
+                  </span>
+                </div>
+                <div className="bg-[rgba(255,255,255,0.05)] border border-[rgba(255,255,255,0.1)] rounded-2xl p-3">
+                  <span className="text-[10px] uppercase tracking-wider text-[#b9becf] block">
+                    Duration
+                  </span>
+                  <span className="text-sm font-bold text-[#eef0f6]">
+                    {sourceData.duration} s
+                  </span>
+                </div>
+                <div className="bg-[rgba(255,255,255,0.05)] border border-[rgba(255,255,255,0.1)] rounded-2xl p-3">
+                  <span className="text-[10px] uppercase tracking-wider text-[#b9becf] block">
+                    Bitrate
+                  </span>
+                  <span className="text-sm font-bold text-[#eef0f6]">
+                    {(sourceData.bitrate / 1000000).toFixed(2)} Mbps
+                  </span>
+                </div>
+                <div className="bg-[rgba(255,255,255,0.05)] border border-[rgba(255,255,255,0.1)] rounded-2xl p-3">
+                  <span className="text-[10px] uppercase tracking-wider text-[#b9becf] block">
+                    Codec / FPS
+                  </span>
+                  <span className="text-sm font-bold text-[#eef0f6]">
+                    {sourceData.codec.toUpperCase()} @ {sourceData.framerate} fps
+                  </span>
+                </div>
+                <div className="bg-[rgba(255,255,255,0.05)] border border-[rgba(255,255,255,0.1)] rounded-2xl p-3">
+                  <span className="text-[10px] uppercase tracking-wider text-[#b9becf] block">
+                    Total Frames
+                  </span>
+                  <span className="text-sm font-bold text-[#eef0f6]">
+                    {sourceData.frames ? sourceData.frames.toLocaleString() : 'N/A'}
+                  </span>
+                </div>
+                <div className="bg-[rgba(255,255,255,0.05)] border border-[rgba(255,255,255,0.1)] rounded-2xl p-3">
+                  <span className="text-[10px] uppercase tracking-wider text-[#b9becf] block">
+                    File Size
+                  </span>
+                  <span className="text-sm font-bold text-[#eef0f6]">
+                    {formatFileSize(sourceData.size_bytes)}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Target Transcoding Settings Form */}
+            <div className="rounded-3xl p-6 sm:p-8 bg-[rgba(255,255,255,0.06)] border border-[rgba(255,255,255,0.14)] backdrop-blur-2xl shadow-xl space-y-6">
+              <div>
+                <h3 className="text-lg font-semibold text-[#eef0f6] flex items-center gap-2">
+                  <Settings className="w-5 h-5 text-cyan-400" />
+                  Target Transcoding Configuration
+                </h3>
+                <p className="text-xs text-[#b9becf] mt-0.5">
+                  Configure output encoding settings to compute model prediction.
+                </p>
+              </div>
+
+              {/* Quick Target Presets */}
+              <div className="space-y-2">
+                <label className="text-xs font-semibold text-[#b9becf] uppercase tracking-wider">
+                  Quick Output Presets:
+                </label>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                  {TARGET_PRESETS.map((preset) => (
+                    <button
+                      key={preset.name}
+                      type="button"
+                      onClick={() =>
+                        setTargetData({
+                          o_codec: preset.codec,
+                          o_width: preset.width,
+                          o_height: preset.height,
+                          o_bitrate: preset.bitrate,
+                          o_framerate: preset.framerate,
+                        })
+                      }
+                      className={`p-3 rounded-2xl border text-left text-xs transition-all cursor-pointer ${
+                        targetData.o_width === preset.width &&
+                        targetData.o_height === preset.height &&
+                        targetData.o_codec === preset.codec
+                          ? 'border-cyan-400 bg-cyan-500/15 text-[#eef0f6] font-bold shadow-md shadow-cyan-500/10'
+                          : 'border-[rgba(255,255,255,0.1)] bg-[rgba(255,255,255,0.04)] text-[#b9becf] hover:bg-[rgba(255,255,255,0.08)]'
+                      }`}
+                    >
+                      <div>{preset.name}</div>
+                      <div className="text-[11px] text-[#b9becf]/70 font-normal mt-0.5">
+                        {(preset.bitrate / 1000000).toFixed(1)} Mbps
+                      </div>
+                    </button>
                   ))}
-                </select>
-              </div>
-
-              {/* Output Resolution Width */}
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
-                  Output Width (px)
-                </label>
-                <input
-                  type="number"
-                  min="160"
-                  max="7680"
-                  value={targetData.o_width}
-                  onChange={(e) =>
-                    setTargetData({
-                      ...targetData,
-                      o_width: parseInt(e.target.value) || 0,
-                    })
-                  }
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm font-medium focus:ring-2 focus:ring-indigo-500 focus:outline-hidden"
-                />
-              </div>
-
-              {/* Output Resolution Height */}
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
-                  Output Height (px)
-                </label>
-                <input
-                  type="number"
-                  min="120"
-                  max="4320"
-                  value={targetData.o_height}
-                  onChange={(e) =>
-                    setTargetData({
-                      ...targetData,
-                      o_height: parseInt(e.target.value) || 0,
-                    })
-                  }
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm font-medium focus:ring-2 focus:ring-indigo-500 focus:outline-hidden"
-                />
-              </div>
-
-              {/* Output Bitrate */}
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
-                  Output Bitrate (bps)
-                </label>
-                <input
-                  type="number"
-                  min="50000"
-                  max="100000000"
-                  step="100000"
-                  value={targetData.o_bitrate}
-                  onChange={(e) =>
-                    setTargetData({
-                      ...targetData,
-                      o_bitrate: parseInt(e.target.value) || 0,
-                    })
-                  }
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm font-medium focus:ring-2 focus:ring-indigo-500 focus:outline-hidden"
-                />
-                <span className="text-[11px] text-slate-400 mt-1 block">
-                  = {(targetData.o_bitrate / 1000000).toFixed(2)} Mbps
-                </span>
-              </div>
-
-              {/* Output Framerate */}
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
-                  Output Framerate (fps)
-                </label>
-                <input
-                  type="number"
-                  min="1"
-                  max="120"
-                  step="0.1"
-                  value={targetData.o_framerate}
-                  onChange={(e) =>
-                    setTargetData({
-                      ...targetData,
-                      o_framerate: parseFloat(e.target.value) || 0,
-                    })
-                  }
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm font-medium focus:ring-2 focus:ring-indigo-500 focus:outline-hidden"
-                />
-              </div>
-            </div>
-
-            {/* Validation warning alerts */}
-            {validationWarnings.length > 0 && (
-              <div className="p-4 rounded-xl bg-amber-50 border border-amber-200 text-xs text-amber-800 space-y-1">
-                <span className="font-bold block">Configuration Notices:</span>
-                {validationWarnings.map((warn, i) => (
-                  <p key={i}>&bull; {warn}</p>
-                ))}
-              </div>
-            )}
-
-            {/* Action buttons */}
-            <div className="flex items-center justify-between pt-4 border-t border-slate-100">
-              <button
-                type="button"
-                onClick={() => setStep(1)}
-                className="px-5 py-2.5 rounded-xl border border-slate-200 text-slate-600 font-semibold text-xs hover:bg-slate-50 transition-colors"
-              >
-                &larr; Back to Source
-              </button>
-
-              <button
-                type="button"
-                onClick={handlePredict}
-                disabled={predicting}
-                className="px-6 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm transition-colors shadow-xs shadow-indigo-600/20 inline-flex items-center gap-2 disabled:opacity-50"
-              >
-                {predicting ? (
-                  <>
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    Computing Prediction...
-                  </>
-                ) : (
-                  <>
-                    <Sparkles className="w-4 h-4" />
-                    Predict Transcoding Time &rarr;
-                  </>
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ========================================================================= */}
-      {/* STEP 3: PREDICTION RESULT DISPLAY                                         */}
-      {/* ========================================================================= */}
-      {step === 3 && predictionResult && (
-        <div className="space-y-6">
-          <div className="bg-white rounded-3xl border border-slate-200/80 p-8 sm:p-10 shadow-xs space-y-8 text-center">
-            {/* Header pill */}
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 text-xs font-semibold border border-emerald-100">
-              <CheckCircle2 className="w-3.5 h-3.5" />
-              Machine Learning Prediction Complete
-            </div>
-
-            {/* Primary Time Highlight */}
-            <div className="space-y-2">
-              <div className="text-xs font-semibold uppercase tracking-wider text-slate-400">
-                Estimated Transcoding Duration
-              </div>
-              <div className="text-5xl sm:text-6xl font-black tracking-tight text-indigo-950">
-                {predictionResult.prediction.estimated_time_seconds.toFixed(2)}{' '}
-                <span className="text-2xl sm:text-3xl font-semibold text-slate-400">
-                  seconds
-                </span>
-              </div>
-              <p className="text-sm text-slate-500 font-medium">
-                Formatted:{' '}
-                <strong className="text-slate-800">
-                  {predictionResult.prediction.estimated_time_formatted}
-                </strong>{' '}
-                &bull; Model: {predictionResult.prediction.model_name}
-              </p>
-            </div>
-
-            {/* Performance Context Metrics */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-2xl mx-auto pt-2">
-              <div className="p-4 rounded-2xl bg-slate-50 border border-slate-100 text-left">
-                <span className="text-xs text-slate-400 block font-medium">
-                  Source Duration
-                </span>
-                <span className="text-lg font-bold text-slate-800">
-                  {sourceData.duration} s
-                </span>
-              </div>
-
-              <div className="p-4 rounded-2xl bg-slate-50 border border-slate-100 text-left">
-                <span className="text-xs text-slate-400 block font-medium">
-                  Realtime Factor
-                </span>
-                <span className="text-lg font-bold text-indigo-600">
-                  {(
-                    predictionResult.prediction.estimated_time_seconds /
-                    Math.max(sourceData.duration, 1)
-                  ).toFixed(2)}
-                  ×
-                </span>
-              </div>
-
-              <div className="p-4 rounded-2xl bg-slate-50 border border-slate-100 text-left">
-                <span className="text-xs text-slate-400 block font-medium">
-                  Model MAE
-                </span>
-                <span className="text-lg font-bold text-slate-800">
-                  &plusmn; 1.80 s
-                </span>
-              </div>
-            </div>
-
-            {/* Comparison Details Summary */}
-            <div className="p-6 rounded-2xl bg-slate-50/70 border border-slate-100 text-left max-w-2xl mx-auto space-y-3">
-              <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400">
-                Transcoding Job Summary
-              </h4>
-              <div className="grid grid-cols-2 gap-4 text-xs">
-                <div>
-                  <span className="text-slate-400 block">Source Format:</span>
-                  <span className="font-semibold text-slate-800">
-                    {sourceData.width}×{sourceData.height} &bull;{' '}
-                    {sourceData.codec.toUpperCase()} &bull;{' '}
-                    {(sourceData.bitrate / 1000000).toFixed(1)} Mbps
-                  </span>
-                </div>
-                <div>
-                  <span className="text-slate-400 block">Target Format:</span>
-                  <span className="font-semibold text-slate-800">
-                    {targetData.o_width}×{targetData.o_height} &bull;{' '}
-                    {targetData.o_codec.toUpperCase()} &bull;{' '}
-                    {(targetData.o_bitrate / 1000000).toFixed(1)} Mbps
-                  </span>
                 </div>
               </div>
-            </div>
 
-            {/* Warning pills if any */}
-            {predictionResult.warnings && predictionResult.warnings.length > 0 && (
-              <div className="p-4 rounded-xl bg-amber-50 border border-amber-200 text-xs text-amber-800 max-w-2xl mx-auto text-left">
-                <span className="font-bold block mb-1">Observation Warnings:</span>
-                {predictionResult.warnings.map((w, i) => (
-                  <p key={i}>&bull; {w}</p>
-                ))}
+              {/* Input Fields Grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 pt-2">
+                {/* Output Codec */}
+                <div>
+                  <label className="block text-xs font-semibold text-[#b9becf] uppercase tracking-wider mb-1.5">
+                    Target Codec
+                  </label>
+                  <select
+                    value={targetData.o_codec}
+                    onChange={(e) =>
+                      setTargetData({ ...targetData, o_codec: e.target.value })
+                    }
+                    className="w-full px-4 py-2.5 rounded-xl border border-[rgba(255,255,255,0.15)] bg-[rgba(255,255,255,0.08)] text-[#eef0f6] text-sm focus:ring-2 focus:ring-cyan-400 focus:outline-hidden"
+                  >
+                    {supportedCodecs.map((codec) => (
+                      <option key={codec} value={codec} className="bg-[#04050c] text-white">
+                        {codec.toUpperCase()}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Output Width */}
+                <div>
+                  <label className="block text-xs font-semibold text-[#b9becf] uppercase tracking-wider mb-1.5">
+                    Output Width (px)
+                  </label>
+                  <input
+                    type="number"
+                    min="160"
+                    max="7680"
+                    value={targetData.o_width}
+                    onChange={(e) =>
+                      setTargetData({
+                        ...targetData,
+                        o_width: parseInt(e.target.value) || 0,
+                      })
+                    }
+                    className="w-full px-4 py-2.5 rounded-xl border border-[rgba(255,255,255,0.15)] bg-[rgba(255,255,255,0.08)] text-[#eef0f6] text-sm focus:ring-2 focus:ring-cyan-400 focus:outline-hidden"
+                  />
+                </div>
+
+                {/* Output Height */}
+                <div>
+                  <label className="block text-xs font-semibold text-[#b9becf] uppercase tracking-wider mb-1.5">
+                    Output Height (px)
+                  </label>
+                  <input
+                    type="number"
+                    min="120"
+                    max="4320"
+                    value={targetData.o_height}
+                    onChange={(e) =>
+                      setTargetData({
+                        ...targetData,
+                        o_height: parseInt(e.target.value) || 0,
+                      })
+                    }
+                    className="w-full px-4 py-2.5 rounded-xl border border-[rgba(255,255,255,0.15)] bg-[rgba(255,255,255,0.08)] text-[#eef0f6] text-sm focus:ring-2 focus:ring-cyan-400 focus:outline-hidden"
+                  />
+                </div>
+
+                {/* Output Bitrate */}
+                <div>
+                  <label className="block text-xs font-semibold text-[#b9becf] uppercase tracking-wider mb-1.5">
+                    Output Bitrate (bps)
+                  </label>
+                  <input
+                    type="number"
+                    min="50000"
+                    max="100000000"
+                    step="100000"
+                    value={targetData.o_bitrate}
+                    onChange={(e) =>
+                      setTargetData({
+                        ...targetData,
+                        o_bitrate: parseInt(e.target.value) || 0,
+                      })
+                    }
+                    className="w-full px-4 py-2.5 rounded-xl border border-[rgba(255,255,255,0.15)] bg-[rgba(255,255,255,0.08)] text-[#eef0f6] text-sm focus:ring-2 focus:ring-cyan-400 focus:outline-hidden"
+                  />
+                  <span className="text-[11px] text-[#b9becf]/70 mt-1 block">
+                    = {(targetData.o_bitrate / 1000000).toFixed(2)} Mbps
+                  </span>
+                </div>
+
+                {/* Output Framerate */}
+                <div>
+                  <label className="block text-xs font-semibold text-[#b9becf] uppercase tracking-wider mb-1.5">
+                    Output Framerate (fps)
+                  </label>
+                  <input
+                    type="number"
+                    min="1"
+                    max="120"
+                    step="0.1"
+                    value={targetData.o_framerate}
+                    onChange={(e) =>
+                      setTargetData({
+                        ...targetData,
+                        o_framerate: parseFloat(e.target.value) || 0,
+                      })
+                    }
+                    className="w-full px-4 py-2.5 rounded-xl border border-[rgba(255,255,255,0.15)] bg-[rgba(255,255,255,0.08)] text-[#eef0f6] text-sm focus:ring-2 focus:ring-cyan-400 focus:outline-hidden"
+                  />
+                </div>
               </div>
-            )}
 
-            {/* Scientific Disclaimer */}
-            <div className="p-4 rounded-2xl bg-slate-50 text-[11px] text-slate-500 max-w-2xl mx-auto text-left border border-slate-100">
-              <strong className="text-slate-700">Experimental Notice:</strong> The
-              prediction is calculated using an XGBoost model trained on benchmark
-              data recorded with FFmpeg 4 on an Intel Core i7-3720QM system. Actual
-              processing time will vary based on hardware concurrency, GPU acceleration
-              (e.g., NVENC/QuickSync), and encoder presets.
-            </div>
-
-            {/* Action buttons */}
-            <div className="flex flex-wrap items-center justify-center gap-3 pt-4">
-              <button
-                type="button"
-                onClick={handleReset}
-                className="px-6 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm transition-colors shadow-xs inline-flex items-center gap-2"
-              >
-                <RotateCcw className="w-4 h-4" />
-                Analyze Another Video
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setStep(2)}
-                className="px-5 py-3 rounded-xl border border-slate-200 text-slate-700 font-semibold text-sm hover:bg-slate-50 transition-colors"
-              >
-                Adjust Target Settings
-              </button>
-
-              {savedToHistory && (
-                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-50 text-emerald-700 text-xs font-semibold">
-                  <Check className="w-4 h-4" />
-                  Saved to History
-                </span>
+              {/* Validation Warnings */}
+              {validationWarnings.length > 0 && (
+                <div className="p-4 rounded-2xl bg-amber-950/40 border border-amber-500/30 text-xs text-amber-200 space-y-1">
+                  <span className="font-semibold block text-amber-300">Configuration Notices:</span>
+                  {validationWarnings.map((warn, i) => (
+                    <p key={i}>&bull; {warn}</p>
+                  ))}
+                </div>
               )}
+
+              {/* Action Buttons */}
+              <div className="flex items-center justify-between pt-4 border-t border-[rgba(255,255,255,0.1)]">
+                <button
+                  type="button"
+                  onClick={() => setStep(1)}
+                  className="px-5 py-2.5 rounded-full border border-[rgba(255,255,255,0.16)] text-[#b9becf] font-medium text-xs hover:bg-[rgba(255,255,255,0.08)] hover:text-white transition-colors cursor-pointer"
+                >
+                  &larr; Back to Source
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handlePredict}
+                  disabled={predicting}
+                  className="px-7 py-3 rounded-full bg-white text-[#2f2f33] hover:bg-[#eef0f6] font-medium text-xs tracking-tight shadow-xl shadow-white/10 hover:shadow-cyan-400/20 inline-flex items-center gap-2 disabled:opacity-50 transition-all cursor-pointer"
+                >
+                  {predicting ? (
+                    <>
+                      <div className="w-3.5 h-3.5 border-2 border-[#2f2f33] border-t-transparent rounded-full animate-spin" />
+                      Computing Prediction...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="w-3.5 h-3.5 text-cyan-600" />
+                      Predict Transcoding Time &rarr;
+                    </>
+                  )}
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
+
+        {/* ========================================================================= */}
+        {/* STEP 3: PREDICTION RESULT DISPLAY                                         */}
+        {/* ========================================================================= */}
+        {step === 3 && predictionResult && (
+          <div className="space-y-6">
+            <div className="rounded-3xl p-8 sm:p-12 bg-[rgba(255,255,255,0.06)] border border-[rgba(255,255,255,0.14)] backdrop-blur-2xl shadow-2xl space-y-8 text-center">
+              {/* Badge */}
+              <div className="inline-flex items-center gap-2 px-4 py-1 rounded-full bg-emerald-500/15 text-emerald-300 text-xs font-semibold border border-emerald-500/30">
+                <CheckCircle2 className="w-3.5 h-3.5" />
+                Machine Learning Prediction Complete
+              </div>
+
+              {/* Time Highlight */}
+              <div className="space-y-2">
+                <div className="text-xs font-semibold uppercase tracking-wider text-[#b9becf]">
+                  Estimated Transcoding Duration
+                </div>
+                <div className="text-5xl sm:text-7xl font-light tracking-tight text-[#eef0f6]">
+                  {predictionResult.prediction.estimated_time_seconds.toFixed(2)}{' '}
+                  <span className="text-2xl sm:text-3xl font-light text-[#b9becf]">
+                    seconds
+                  </span>
+                </div>
+                <p className="text-xs sm:text-sm text-[#b9becf] font-normal">
+                  Formatted:{' '}
+                  <strong className="text-white font-medium">
+                    {predictionResult.prediction.estimated_time_formatted}
+                  </strong>{' '}
+                  &bull; Model: {predictionResult.prediction.model_name}
+                </p>
+              </div>
+
+              {/* Performance Context Metrics */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-2xl mx-auto pt-2">
+                <div className="p-4 rounded-2xl bg-[rgba(255,255,255,0.04)] border border-[rgba(255,255,255,0.08)] text-left">
+                  <span className="text-xs text-[#b9becf] block font-medium">
+                    Source Duration
+                  </span>
+                  <span className="text-lg font-bold text-[#eef0f6]">
+                    {sourceData.duration} s
+                  </span>
+                </div>
+
+                <div className="p-4 rounded-2xl bg-[rgba(255,255,255,0.04)] border border-[rgba(255,255,255,0.08)] text-left">
+                  <span className="text-xs text-[#b9becf] block font-medium">
+                    Realtime Factor
+                  </span>
+                  <span className="text-lg font-bold text-cyan-300">
+                    {(
+                      predictionResult.prediction.estimated_time_seconds /
+                      Math.max(sourceData.duration, 1)
+                    ).toFixed(2)}
+                    ×
+                  </span>
+                </div>
+
+                <div className="p-4 rounded-2xl bg-[rgba(255,255,255,0.04)] border border-[rgba(255,255,255,0.08)] text-left">
+                  <span className="text-xs text-[#b9becf] block font-medium">
+                    Model MAE
+                  </span>
+                  <span className="text-lg font-bold text-[#eef0f6]">
+                    &plusmn; 1.80 s
+                  </span>
+                </div>
+              </div>
+
+              {/* Job Summary */}
+              <div className="p-6 rounded-2xl bg-[rgba(255,255,255,0.04)] border border-[rgba(255,255,255,0.08)] text-left max-w-2xl mx-auto space-y-3">
+                <h4 className="text-xs font-semibold uppercase tracking-wider text-[#b9becf]">
+                  Transcoding Job Summary
+                </h4>
+                <div className="grid grid-cols-2 gap-4 text-xs">
+                  <div>
+                    <span className="text-[#b9becf]/70 block">Source Format:</span>
+                    <span className="font-medium text-[#eef0f6]">
+                      {sourceData.width}×{sourceData.height} &bull;{' '}
+                      {sourceData.codec.toUpperCase()} &bull;{' '}
+                      {(sourceData.bitrate / 1000000).toFixed(1)} Mbps
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-[#b9becf]/70 block">Target Format:</span>
+                    <span className="font-medium text-[#eef0f6]">
+                      {targetData.o_width}×{targetData.o_height} &bull;{' '}
+                      {targetData.o_codec.toUpperCase()} &bull;{' '}
+                      {(targetData.o_bitrate / 1000000).toFixed(1)} Mbps
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex flex-wrap items-center justify-center gap-3 pt-4">
+                <button
+                  type="button"
+                  onClick={handleReset}
+                  className="px-6 py-3 rounded-full bg-white text-[#2f2f33] hover:bg-[#eef0f6] font-medium text-xs tracking-tight shadow-lg shadow-white/10 hover:shadow-cyan-400/20 inline-flex items-center gap-2 cursor-pointer transition-all"
+                >
+                  <RotateCcw className="w-3.5 h-3.5" />
+                  Analyze Another Video
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setStep(2)}
+                  className="px-5 py-3 rounded-full border border-[rgba(255,255,255,0.18)] text-[#eef0f6] font-medium text-xs hover:bg-[rgba(255,255,255,0.08)] transition-colors cursor-pointer"
+                >
+                  Adjust Target Settings
+                </button>
+
+                {savedToHistory && (
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-500/15 text-emerald-300 text-xs font-medium border border-emerald-500/30">
+                    <Check className="w-3.5 h-3.5" />
+                    Saved to History
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Footer: delay 1650ms */}
+      <footer
+        className="mt-12 text-center text-xs text-[#b9becf]/60"
+        style={{
+          opacity: mounted ? 1 : 0,
+          transform: mounted ? 'translateY(0)' : 'translateY(1.25rem)',
+          transition: 'opacity 700ms cubic-bezier(0.2, 0, 0, 1) 1650ms, transform 700ms cubic-bezier(0.2, 0, 0, 1) 1650ms',
+        }}
+      >
+        <p>
+          Tuned XGBoost Ensemble &bull; 68,784 Measurements &bull; MAE 1.60s &bull; R² 0.9356 &bull; UC Irvine Benchmark Dataset
+        </p>
+      </footer>
     </div>
   );
 };
