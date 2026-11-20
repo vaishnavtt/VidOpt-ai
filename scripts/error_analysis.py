@@ -1,5 +1,10 @@
 import os
+from pathlib import Path
 import joblib
+
+# Ensure repository root is working directory
+REPO_ROOT = Path(__file__).resolve().parent.parent
+os.chdir(REPO_ROOT)
 import numpy as np
 import pandas as pd
 import matplotlib

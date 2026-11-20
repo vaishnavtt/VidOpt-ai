@@ -114,6 +114,7 @@ class VideoMetadataResponse(BaseModel):
     codec: Optional[str] = None
     bitrate: Optional[int] = None
     framerate: Optional[float] = None
+    frames: Optional[int] = None
     size_bytes: Optional[int] = None
     format_name: Optional[str] = None
     message: str

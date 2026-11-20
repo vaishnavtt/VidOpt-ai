@@ -10,6 +10,11 @@ import pandas as pd
 import joblib
 
 from sklearn.model_selection import GroupShuffleSplit
+from pathlib import Path
+
+# Ensure script runs with repository root as working directory
+REPO_ROOT = Path(__file__).resolve().parent.parent
+os.chdir(REPO_ROOT)
 
 # ==========================================
 # CONFIGURATION

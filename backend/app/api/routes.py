@@ -181,6 +181,11 @@ async def analyze_video(file: UploadFile = File(...)) -> VideoMetadataResponse:
         with tempfile.NamedTemporaryFile(suffix=suffix, delete=False) as tmp:
             tmp_path = Path(tmp.name)
             content = await file.read()
+            if len(content) > MAX_UPLOAD_SIZE:
+                raise HTTPException(
+                    status_code=413,
+                    detail=f"File exceeds maximum allowed upload size ({MAX_UPLOAD_SIZE // (1024 * 1024)} MB).",
+                )
             tmp.write(content)
 
         metadata = VideoService.extract_metadata(tmp_path)

@@ -106,10 +106,17 @@ def load_model(path: str):
     FileNotFoundError if the file does not exist.
     """
     if not os.path.exists(path):
-        raise FileNotFoundError(
-            f"Model file not found: '{path}'. "
-            f"Run the appropriate training script to generate it."
-        )
+        # Also check relative to repository root if invoked from scripts/ or subdirectories
+        from pathlib import Path
+        repo_root = Path(__file__).resolve().parent.parent
+        alt_path = repo_root / path
+        if alt_path.exists():
+            path = str(alt_path)
+        else:
+            raise FileNotFoundError(
+                f"Model file not found: '{path}'. "
+                f"Run the appropriate training script to generate it."
+            )
     model = joblib.load(path)
     if model is None:
         raise ValueError(f"Model loaded as None from '{path}'. File may be corrupt.")
